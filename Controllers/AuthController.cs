@@ -21,22 +21,22 @@ public class AuthController : ControllerBase
     [HttpPost("register")]
     public ActionResult Register([FromBody] RegisterRequest request)
     {
-        if (string.IsNullOrEmpty(request.Username) || string.IsNullOrEmpty(request.Password))
+        if (string.IsNullOrEmpty(request.username) || string.IsNullOrEmpty(request.password))
         {
-            return BadRequest("Username and password are required.");
+            return BadRequest(new { message = "Username and password are required." });
         }
 
-        var ExistingUser = _context.Users.FirstOrDefault(u => u.Username.ToLower() == request.Username.ToLower());
+        var ExistingUser = _context.Users.FirstOrDefault(u => u.Username.ToLower() == request.username.ToLower());
 
         if (ExistingUser != null)
         {
-            return BadRequest($"User With Provided Username: {request.Username}, already exists.");
+            return BadRequest(new { message = $"User With Provided Username: {request.username}, already exists." });
         }
-        string passwordHash = BCrypt.Net.BCrypt.HashPassword(request.Password);
+        string passwordHash = BCrypt.Net.BCrypt.HashPassword(request.password);
 
-        _context.Users.Add(new User { Username = request.Username, Password = passwordHash });
+        _context.Users.Add(new User { Username = request.username, Password = passwordHash });
         _context.SaveChanges();
-        return Ok($"Registered User: {request.Username}");
+        return Ok(new { message = "Registration successful" });
     }
 
     [HttpPost("login")]

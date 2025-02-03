@@ -1,11 +1,16 @@
 using System.Text;
+using dotenv.net;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
+DotEnv.Load();
 
 var builder = WebApplication.CreateBuilder(args);
 
 string JwtKey = builder.Configuration["JWT_Secret"];
+string connectionString = builder.Configuration["DefaultConnection"];
+string allowedOrigin = builder.Configuration["Allowed_Origin"];
+
 builder.Services.AddAuthentication(options =>
 {
     options.DefaultAuthenticateScheme = JwtBearerDefaults.AuthenticationScheme;
@@ -24,13 +29,30 @@ builder.Services.AddAuthentication(options =>
     };
 });
 
-builder.Services.AddAuthorization();
+builder.Services.AddCors(options =>
+{
+    options.AddPolicy("AllowedOrigin", policy =>
+    {
+        policy.WithOrigins(allowedOrigin)
+              .AllowAnyHeader()
+              .AllowAnyMethod();
+    });
+});
 
+
+
+
+builder.Services.AddAuthorization();
 builder.Services.AddSwaggerGen();
 builder.Services.AddControllers();
-builder.Services.AddDbContext<AppDbContext>(options => options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection")));
+builder.Services.AddDbContext<AppDbContext>(options => options.UseSqlServer(connectionString));
 var app = builder.Build();
-
+app.UseCors("AllowedOrigin");
+app.UseRouting();
+app.UseEndpoints(endpoints =>
+{
+    endpoints.MapControllers();
+});
 
 if (app.Environment.IsDevelopment())
 {
