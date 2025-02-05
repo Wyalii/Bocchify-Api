@@ -7,10 +7,9 @@ DotEnv.Load();
 
 var builder = WebApplication.CreateBuilder(args);
 
-string JwtKey = builder.Configuration["JWT_Secret"];
-string connectionString = builder.Configuration["DefaultConnection"];
-string allowedOrigin = builder.Configuration["Allowed_Origin"];
-
+string connectionString = Environment.GetEnvironmentVariable("DefaultConnection");
+string allowedOrigin = Environment.GetEnvironmentVariable("Allowed_Origin");
+string JwtKey = Environment.GetEnvironmentVariable("JWT_Secret");
 builder.Services.AddAuthentication(options =>
 {
     options.DefaultAuthenticateScheme = JwtBearerDefaults.AuthenticationScheme;
@@ -21,7 +20,7 @@ builder.Services.AddAuthentication(options =>
     options.TokenValidationParameters = new TokenValidationParameters
     {
         ValidateIssuerSigningKey = true,
-        IssuerSigningKey = new SymmetricSecurityKey(Encoding.ASCII.GetBytes(JwtKey)),
+        IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(JwtKey)),
         ValidateIssuer = false,
         ValidateAudience = false,
         ValidateLifetime = true,
