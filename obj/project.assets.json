@@ -5264,11 +5264,11 @@
   "project": {
     "version": "1.0.0",
     "restore": {
-      "projectUniqueName": "/home/wyalii/Desktop/Bocchify_Server/Bocchify_Server.csproj",
+      "projectUniqueName": "/home/wyalii/Desktop/Bocchify-Api/Bocchify_Server.csproj",
       "projectName": "Bocchify_Server",
-      "projectPath": "/home/wyalii/Desktop/Bocchify_Server/Bocchify_Server.csproj",
+      "projectPath": "/home/wyalii/Desktop/Bocchify-Api/Bocchify_Server.csproj",
       "packagesPath": "/home/wyalii/.nuget/packages/",
-      "outputPath": "/home/wyalii/Desktop/Bocchify_Server/obj/",
+      "outputPath": "/home/wyalii/Desktop/Bocchify-Api/obj/",
       "projectStyle": "PackageReference",
       "configFilePaths": [
         "/home/wyalii/.nuget/NuGet/NuGet.Config"
@@ -5363,7 +5363,7 @@
             "privateAssets": "all"
           }
         },
-        "runtimeIdentifierGraphPath": "/usr/share/dotnet/sdk/9.0.101/PortableRuntimeIdentifierGraph.json"
+        "runtimeIdentifierGraphPath": "/usr/share/dotnet/sdk/9.0.102/PortableRuntimeIdentifierGraph.json"
       }
     }
   }

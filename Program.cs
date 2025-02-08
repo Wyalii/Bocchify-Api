@@ -10,11 +10,13 @@ var builder = WebApplication.CreateBuilder(args);
 string connectionString = Environment.GetEnvironmentVariable("DefaultConnection");
 string allowedOrigin = Environment.GetEnvironmentVariable("Allowed_Origin");
 string JwtKey = Environment.GetEnvironmentVariable("JWT_Secret");
+
 builder.Services.AddAuthentication(options =>
 {
     options.DefaultAuthenticateScheme = JwtBearerDefaults.AuthenticationScheme;
     options.DefaultChallengeScheme = JwtBearerDefaults.AuthenticationScheme;
 })
+
 .AddJwtBearer(options =>
 {
     options.TokenValidationParameters = new TokenValidationParameters
@@ -38,9 +40,7 @@ builder.Services.AddCors(options =>
     });
 });
 
-
-
-
+builder.Services.AddHttpClient<SpotifyService>();
 builder.Services.AddAuthorization();
 builder.Services.AddSwaggerGen();
 builder.Services.AddControllers();
