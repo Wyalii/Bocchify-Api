@@ -16,13 +16,13 @@ public class SpotifyController : ControllerBase
         _spotifyService = spotifyService;
     }
 
-    [HttpGet("access-token")]
-    public async Task<IActionResult> GetAccessToken()
+    [HttpPost("get-album")]
+    public async Task<IActionResult> GetAccessToken([FromBody] string albumRequest)
     {
         try
         {
-            var accessToken = await _spotifyService.GetAccessTokenAsync();
-            return Ok(new { AccessToken = accessToken });
+            var FoundAlbum = await _spotifyService.GetAlbumByName(albumRequest);
+            return Ok(FoundAlbum);
         }
         catch (Exception ex)
         {

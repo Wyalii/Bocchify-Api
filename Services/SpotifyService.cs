@@ -1,6 +1,7 @@
 using System.Net;
 using System.Text;
 using System.Text.Json;
+using System.Text.Json.Nodes;
 
 public class SpotifyService
 {
@@ -45,6 +46,37 @@ public class SpotifyService
         {
             return ex.Message;
         }
+    }
+
+    public class AlbumDTO
+    {
+        public string AlbumName { get; set; }
+        public string ReleaseDate { get; set; }
+        public List<string> ArtistNames { get; set; }
+    }
+
+    public async Task<string> GetAlbumByName(string AlbumName)
+    {
+        if (string.IsNullOrEmpty(_accessToken))
+        {
+            _accessToken = await GetAccessTokenAsync();
+        }
+
+        string searchUrl = $"https://api.spotify.com/v1/search?q={AlbumName}&type=album";
+        HttpRequestMessage request = new HttpRequestMessage(HttpMethod.Get, searchUrl);
+        request.Headers.Add("Authorization", $"Bearer {_accessToken}");
+        HttpResponseMessage response = await _httpClient.SendAsync(request);
+
+        if (!response.IsSuccessStatusCode)
+        {
+            string errorResponse = await response.Content.ReadAsStringAsync();
+            throw new Exception($"Failed to search album: {errorResponse}");
+        }
+
+        string responseData = await response.Content.ReadAsStringAsync();
+
+        return responseData;
+
     }
 
 }

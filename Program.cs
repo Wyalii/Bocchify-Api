@@ -15,9 +15,7 @@ builder.Services.AddAuthentication(options =>
 {
     options.DefaultAuthenticateScheme = JwtBearerDefaults.AuthenticationScheme;
     options.DefaultChallengeScheme = JwtBearerDefaults.AuthenticationScheme;
-})
-
-.AddJwtBearer(options =>
+}).AddJwtBearer(options =>
 {
     options.TokenValidationParameters = new TokenValidationParameters
     {
@@ -40,11 +38,12 @@ builder.Services.AddCors(options =>
     });
 });
 
-builder.Services.AddHttpClient<SpotifyService>();
+
 builder.Services.AddAuthorization();
 builder.Services.AddSwaggerGen();
 builder.Services.AddControllers();
 builder.Services.AddDbContext<AppDbContext>(options => options.UseSqlServer(connectionString));
+builder.Services.AddHttpClient<SpotifyService>();
 var app = builder.Build();
 app.UseCors("AllowedOrigin");
 app.UseRouting();
