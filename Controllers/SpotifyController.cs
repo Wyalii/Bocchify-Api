@@ -16,13 +16,28 @@ public class SpotifyController : ControllerBase
         _spotifyService = spotifyService;
     }
 
-    [HttpPost("get-album")]
-    public async Task<IActionResult> GetAccessToken([FromBody] string albumRequest)
+    [HttpGet("get-categories")]
+    public async Task<IActionResult> GetCategories()
     {
         try
         {
-            var FoundAlbum = await _spotifyService.GetAlbumByName(albumRequest);
-            return Ok(FoundAlbum);
+            var categories = await _spotifyService.GetCategories();
+            return Ok(categories);
+        }
+        catch (Exception ex)
+        {
+            return BadRequest(new { Message = ex.Message });
+        }
+    }
+
+
+    [HttpGet("get-playlists")]
+    public async Task<IActionResult> GetPopAlbums()
+    {
+        try
+        {
+            var albums = await _spotifyService.GetPlaylists();
+            return Ok(albums);
         }
         catch (Exception ex)
         {

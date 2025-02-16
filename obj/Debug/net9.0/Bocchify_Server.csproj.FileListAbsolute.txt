@@ -335,3 +335,4 @@
 /home/wyalii/Desktop/Bocchify-Api/obj/Debug/net9.0/Bocchify_Server.pdb
 /home/wyalii/Desktop/Bocchify-Api/obj/Debug/net9.0/Bocchify_Server.genruntimeconfig.cache
 /home/wyalii/Desktop/Bocchify-Api/obj/Debug/net9.0/ref/Bocchify_Server.dll
+/home/wyalii/Desktop/Bocchify-Api/bin/Debug/net9.0/Newtonsoft.Json.dll
