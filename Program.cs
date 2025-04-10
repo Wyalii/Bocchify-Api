@@ -3,30 +3,21 @@ using dotenv.net;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
+
 DotEnv.Load();
 
 var builder = WebApplication.CreateBuilder(args);
 
-string connectionString = Environment.GetEnvironmentVariable("DefaultConnection");
-string allowedOrigin = Environment.GetEnvironmentVariable("Allowed_Origin");
-string JwtKey = Environment.GetEnvironmentVariable("JWT_Secret");
+var key = Encoding.UTF8.GetBytes(Environment.GetEnvironmentVariable("JWT_Secret"));
 
-builder.Services.AddAuthentication(options =>
+string allowedOrigin = Environment.GetEnvironmentVariable("Allowed_Origin");
+
+var connectionString = Environment.GetEnvironmentVariable("Database_Connection_String");
+builder.Services.AddDbContext<AppDbContext>(options =>
 {
-    options.DefaultAuthenticateScheme = JwtBearerDefaults.AuthenticationScheme;
-    options.DefaultChallengeScheme = JwtBearerDefaults.AuthenticationScheme;
-}).AddJwtBearer(options =>
-{
-    options.TokenValidationParameters = new TokenValidationParameters
-    {
-        ValidateIssuerSigningKey = true,
-        IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(JwtKey)),
-        ValidateIssuer = false,
-        ValidateAudience = false,
-        ValidateLifetime = true,
-        ClockSkew = TimeSpan.Zero
-    };
+    options.UseNpgsql(connectionString);
 });
+
 
 builder.Services.AddCors(options =>
 {
@@ -38,24 +29,45 @@ builder.Services.AddCors(options =>
     });
 });
 
+builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
+    .AddJwtBearer(options =>
+    {
+        options.TokenValidationParameters = new TokenValidationParameters
+        {
+            ValidateIssuer = true,
+            ValidateAudience = true,
+            ValidateLifetime = true,
+            ValidateIssuerSigningKey = true,
+            ValidIssuer = Environment.GetEnvironmentVariable("Jwt_Issuer"),
+            ValidAudience = Environment.GetEnvironmentVariable("Jwt_Audience"),
+            IssuerSigningKey = new SymmetricSecurityKey(key)
+        };
+    });
 
-builder.Services.AddAuthorization();
-builder.Services.AddSwaggerGen();
+
+builder.Services.AddScoped<PasswordService>();
+builder.Services.AddScoped<TokenService>();
+builder.Services.AddHttpClient();
 builder.Services.AddControllers();
-builder.Services.AddDbContext<AppDbContext>(options => options.UseSqlServer(connectionString));
-builder.Services.AddHttpClient<SpotifyService>();
+builder.Services.AddSwaggerGen();
+
 var app = builder.Build();
+
 app.UseCors("AllowedOrigin");
-app.UseRouting();
-app.UseEndpoints(endpoints =>
-{
-    endpoints.MapControllers();
-});
 
 if (app.Environment.IsDevelopment())
 {
     app.UseSwagger();
     app.UseSwaggerUI();
 }
+
+app.UseRouting();
+app.UseAuthentication();
+app.UseAuthorization();
+
+app.UseEndpoints(endpoints =>
+{
+    endpoints.MapControllers();
+});
 
 app.Run();

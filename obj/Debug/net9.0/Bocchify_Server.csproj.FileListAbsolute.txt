@@ -336,3 +336,15 @@
 /home/wyalii/Desktop/Bocchify-Api/obj/Debug/net9.0/Bocchify_Server.genruntimeconfig.cache
 /home/wyalii/Desktop/Bocchify-Api/obj/Debug/net9.0/ref/Bocchify_Server.dll
 /home/wyalii/Desktop/Bocchify-Api/bin/Debug/net9.0/Newtonsoft.Json.dll
+/home/wyalii/Desktop/Bocchify-Api/bin/Debug/net9.0/Microsoft.Extensions.Caching.Abstractions.dll
+/home/wyalii/Desktop/Bocchify-Api/bin/Debug/net9.0/Microsoft.Extensions.Caching.Memory.dll
+/home/wyalii/Desktop/Bocchify-Api/bin/Debug/net9.0/Microsoft.Extensions.Configuration.Abstractions.dll
+/home/wyalii/Desktop/Bocchify-Api/bin/Debug/net9.0/Microsoft.Extensions.DependencyInjection.dll
+/home/wyalii/Desktop/Bocchify-Api/bin/Debug/net9.0/Microsoft.Extensions.DependencyInjection.Abstractions.dll
+/home/wyalii/Desktop/Bocchify-Api/bin/Debug/net9.0/Microsoft.Extensions.Logging.dll
+/home/wyalii/Desktop/Bocchify-Api/bin/Debug/net9.0/Microsoft.Extensions.Logging.Abstractions.dll
+/home/wyalii/Desktop/Bocchify-Api/bin/Debug/net9.0/Microsoft.Extensions.Options.dll
+/home/wyalii/Desktop/Bocchify-Api/bin/Debug/net9.0/Microsoft.Extensions.Primitives.dll
+/home/wyalii/Desktop/Bocchify-Api/bin/Debug/net9.0/Npgsql.dll
+/home/wyalii/Desktop/Bocchify-Api/bin/Debug/net9.0/Npgsql.EntityFrameworkCore.PostgreSQL.dll
+/home/wyalii/Desktop/Bocchify-Api/bin/Debug/net9.0/System.Text.Json.dll
