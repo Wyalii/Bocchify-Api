@@ -3,9 +3,10 @@ public class UsersRepository
     private readonly AppDbContext _context;
     private readonly PasswordService _passwordService;
 
-    public UsersRepository(AppDbContext context)
+    public UsersRepository(AppDbContext context, PasswordService passwordService)
     {
         _context = context;
+        _passwordService = passwordService;
     }
 
     public User CreateUser(string username, string email, string password)
