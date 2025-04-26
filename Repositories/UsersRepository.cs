@@ -1,7 +1,10 @@
+using MailKit;
+
 public class UsersRepository
 {
     private readonly AppDbContext _context;
     private readonly PasswordService _passwordService;
+
 
     public UsersRepository(AppDbContext context, PasswordService passwordService)
     {
@@ -23,7 +26,8 @@ public class UsersRepository
         {
             Username = username,
             Email = email,
-            Password = hashedPassword
+            Password = hashedPassword,
+            Verified = false
         };
 
         _context.Users.Add(NewUser);

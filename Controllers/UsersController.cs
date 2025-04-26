@@ -7,11 +7,13 @@ public class UsersController : ControllerBase
     private readonly UsersRepository _usersRepository;
     private readonly PasswordService _passwordService;
     private readonly TokenService _tokenService;
-    public UsersController(UsersRepository userRepository, PasswordService passwordService, TokenService tokenService)
+    private readonly MailService _mailService;
+    public UsersController(UsersRepository userRepository, PasswordService passwordService, TokenService tokenService, MailService mailService)
     {
         _usersRepository = userRepository;
         _passwordService = passwordService;
         _tokenService = tokenService;
+        _mailService = mailService;
     }
 
     [HttpPost("Register")]
@@ -22,6 +24,7 @@ public class UsersController : ControllerBase
         {
             return BadRequest(new { message = "Problem On Registrating the user." });
         }
+        _mailService.SendEmailAsync(registratedUser.Email, "test subject", "<h1> verified! </h1>");
 
         return Ok(new { message = $"User: {registratedUser.Username} has been registered." });
     }

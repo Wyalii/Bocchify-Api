@@ -3,6 +3,10 @@ using dotenv.net;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
+using MailKit.Net.Smtp;
+using MailKit.Security;
+using MimeKit;
+
 
 DotEnv.Load();
 
@@ -48,6 +52,7 @@ builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
 builder.Services.AddScoped<PasswordService>();
 builder.Services.AddScoped<TokenService>();
 builder.Services.AddScoped<UsersRepository>();
+builder.Services.AddScoped<MailService>();
 
 builder.Services.AddHttpClient();
 builder.Services.AddControllers();
