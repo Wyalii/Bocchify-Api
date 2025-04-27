@@ -46,10 +46,16 @@ public class UsersRepository
         return foundUser;
     }
 
-    // public bool UpdateUser(int userId)
-    // {
+    public bool UpdateUserVerificationStatus(string email)
+    {
+        User user = _context.Users.FirstOrDefault(u => u.Email == email);
+        if (user == null) return false;
 
-    // }
+        user.Verified = true;
+        _context.Users.Update(user);
+        _context.SaveChanges();
+        return true;
+    }
 
     // public bool RemoveUser(int userId)
     // {

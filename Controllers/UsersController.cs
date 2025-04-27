@@ -24,7 +24,8 @@ public class UsersController : ControllerBase
         {
             return BadRequest(new { message = "Problem On Registrating the user." });
         }
-        _mailService.SendEmailAsync(registratedUser.Email, "test subject", "<h1> verified! </h1>");
+        string verificationUrl = $"http://localhost:5227/api/users/verify?email={registratedUser.Email}";
+        _mailService.SendEmailAsync(registratedUser.Email, "Email Verification", $"<h1>Please verify your email by clicking the link below:</h1><a href='{verificationUrl}'");
 
         return Ok(new { message = $"User: {registratedUser.Username} has been registered." });
     }
@@ -48,4 +49,30 @@ public class UsersController : ControllerBase
 
         return Ok(new { message = $"User: {foundUser.Username} has logged in!", newToken = token });
     }
+
+    [HttpGet("verify")]
+    public IActionResult VerifyAccount([FromQuery] string email)
+    {
+        if (string.IsNullOrEmpty(email))
+        {
+            return BadRequest(new { message = "Email is missing." });
+        }
+
+        User user = _usersRepository.GetUser(email);
+        if (user == null)
+        {
+            return BadRequest(new { message = "User not found." });
+        }
+
+        if (user.Verified)
+        {
+            return Ok(new { message = "Account is already verified." });
+        }
+
+        _usersRepository.UpdateUserVerificationStatus(user.Email);
+
+        return Redirect("http://localhost:4200/verified-success");
+
+    }
+
 }
