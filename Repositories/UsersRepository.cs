@@ -12,7 +12,7 @@ public class UsersRepository
         _passwordService = passwordService;
     }
 
-    public User CreateUser(string username, string email, string password)
+    public User CreateUser(string username, string email, string password, string profileImage)
     {
         User ExistingUser = _context.Users.FirstOrDefault(u => u.Email == email);
         if (ExistingUser != null)
@@ -27,7 +27,8 @@ public class UsersRepository
             Username = username,
             Email = email,
             Password = hashedPassword,
-            Verified = false
+            Verified = false,
+            ProfileImage = profileImage
         };
 
         _context.Users.Add(NewUser);

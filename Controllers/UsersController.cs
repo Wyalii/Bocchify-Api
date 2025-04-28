@@ -19,10 +19,14 @@ public class UsersController : ControllerBase
     [HttpPost("Register")]
     public IActionResult Register([FromBody] RegisterUserDto registerUserDto)
     {
-        User registratedUser = _usersRepository.CreateUser(registerUserDto.Username, registerUserDto.Email, registerUserDto.Password);
+        User registratedUser = _usersRepository.CreateUser(registerUserDto.Username, registerUserDto.Email, registerUserDto.Password, registerUserDto.ProfileImage);
         if (registratedUser == null)
         {
             return BadRequest(new { message = "Problem On Registrating the user." });
+        }
+        if (String.IsNullOrEmpty(registerUserDto.ProfileImage))
+        {
+            return BadRequest(new { message = "profile image is null." });
         }
         string verificationUrl = $"http://localhost:5227/api/users/verify?email={registratedUser.Email}";
         _mailService.SendEmailAsync(registratedUser.Email, "Email Verification", $"<h1>Please verify your email by clicking the link below:</h1><a href='{verificationUrl}'");
@@ -38,6 +42,10 @@ public class UsersController : ControllerBase
         {
             return BadRequest(new { message = $"user with email: {loginUserDto.Email} not found." });
         }
+        if (foundUser.Verified == false)
+        {
+            return BadRequest(new { message = "please check your email and verify your account first." });
+        }
 
         bool correctPassword = _passwordService.VerifyPassword(loginUserDto.Password, foundUser.Password);
         if (correctPassword == false)
@@ -47,7 +55,7 @@ public class UsersController : ControllerBase
 
         string token = _tokenService.GenerateToken(foundUser.Id.ToString(), foundUser.Email);
 
-        return Ok(new { message = $"User: {foundUser.Username} has logged in!", newToken = token });
+        return Ok(new { Name = foundUser.Username, message = $"User: {foundUser.Username} has logged in!", newToken = token, ProfileImage = foundUser.ProfileImage });
     }
 
     [HttpGet("verify")]
