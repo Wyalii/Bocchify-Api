@@ -58,6 +58,19 @@ public class UsersRepository
         return true;
     }
 
+    public object FavouritesHandler(string mail_id, int userId)
+    {
+        Favourite ExistingFavourite = new Favourite { Mal_Id = mail_id, User_Id = userId };
+        if (ExistingFavourite != null)
+        {
+            _context.Favourites.Remove(ExistingFavourite);
+            return new { message = "removed from favourites" };
+        }
+        Favourite NewFavourite = new Favourite { Mal_Id = mail_id, User_Id = userId };
+        _context.Favourites.Add(NewFavourite);
+        return new { message = "added to favourites" };
+    }
+
     // public bool RemoveUser(int userId)
     // {
 

@@ -1,3 +1,5 @@
+
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
 [ApiController]
@@ -23,6 +25,14 @@ public class UsersController : ControllerBase
         if (registratedUser == null)
         {
             return BadRequest(new { message = "Problem On Registrating the user." });
+        }
+        if (String.IsNullOrWhiteSpace(registerUserDto.Username))
+        {
+            return BadRequest(new { message = "Invalid Username Input." });
+        }
+        if (String.IsNullOrWhiteSpace(registerUserDto.Password))
+        {
+            return BadRequest(new { message = "Invalid Password Input." });
         }
         if (String.IsNullOrEmpty(registerUserDto.ProfileImage))
         {
@@ -82,5 +92,21 @@ public class UsersController : ControllerBase
         return Redirect("http://localhost:4200/verified-success");
 
     }
+
+    [Authorize]
+    [HttpPost("Favourites")]
+    public IActionResult Favourite([FromQuery] string mal_id)
+    {
+        var userId = User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value;
+
+        if (userId == null)
+        {
+            return Unauthorized(new { message = "User ID not found in token." });
+        }
+
+        var result = _usersRepository.FavouritesHandler(mal_id, int.Parse(userId));
+        return Ok(result);
+    }
+
 
 }
