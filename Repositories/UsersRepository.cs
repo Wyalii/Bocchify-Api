@@ -58,29 +58,29 @@ public class UsersRepository
         return true;
     }
 
-    public object FavouriteHandler(int mal_id, int user_id)
+    public bool FavouriteHandler(int mal_id, int user_id)
     {
         User userExists = _context.Users.FirstOrDefault(u => u.Id == user_id);
         if (userExists == null)
         {
-            return new { message = "invalid user id" };
+            return false;
         }
         Favourite existingFavourite = _context.Favourites.FirstOrDefault(f => f.Mal_Id == mal_id && f.UserId == user_id);
         if (existingFavourite != null)
         {
             _context.Favourites.Remove(existingFavourite);
             _context.SaveChanges();
-            return new { message = "removed from favourites" };
+            return false;
         }
         Favourite NewFavourite = new Favourite { Mal_Id = mal_id, UserId = user_id };
         _context.Favourites.Add(NewFavourite);
         _context.SaveChanges();
-        return new { message = "added to favourites" };
+        return true;
     }
-
-
-
-
+    public bool IsFavourite(int mal_id, int user_id)
+    {
+        return _context.Favourites.Any(f => f.Mal_Id == mal_id && f.UserId == user_id);
+    }
     // public bool RemoveUser(int userId)
     // {
 

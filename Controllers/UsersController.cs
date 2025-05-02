@@ -1,4 +1,5 @@
 
+using System.Security.Claims;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
@@ -60,7 +61,7 @@ public class UsersController : ControllerBase
         bool correctPassword = _passwordService.VerifyPassword(loginUserDto.Password, foundUser.Password);
         if (correctPassword == false)
         {
-            return BadRequest(new { message = "Wrong assword try again." });
+            return BadRequest(new { message = "Wrong password try again." });
         }
 
         string token = _tokenService.GenerateToken(foundUser.Id.ToString(), foundUser.Email);
@@ -94,11 +95,55 @@ public class UsersController : ControllerBase
     }
 
     [HttpPost("Favourite")]
-    public IActionResult Favourite(int mal_id, int user_id)
+    public IActionResult Favourite([FromBody] FavouriteRequest request)
     {
-        object response = _usersRepository.FavouriteHandler(mal_id, user_id);
+        var authHeader = Request.Headers["Authorization"].FirstOrDefault();
+        if (string.IsNullOrEmpty(authHeader) || !authHeader.StartsWith("Bearer "))
+        {
+            return Unauthorized("Missing or invalid Authorization header.");
+        }
+        var token = authHeader.Substring("Bearer ".Length).Trim();
+        var claims = _tokenService.GetClaimsFromToken(token);
+        if (claims == null)
+        {
+            return Unauthorized("Invalid or expired token.");
+        }
+
+        var userIdClaim = claims.FindFirst(ClaimTypes.NameIdentifier);
+        if (userIdClaim == null)
+        {
+            return Unauthorized("User ID claim not found.");
+        }
+
+        int user_id = int.Parse(userIdClaim.Value);
+
+        bool response = _usersRepository.FavouriteHandler(request.MalId, user_id);
         return Ok(response);
     }
+    [HttpPost("CheckFavourite")]
+    public IActionResult CheckFavourite([FromBody] FavouriteRequest request)
+    {
+        var authHeader = Request.Headers["Authorization"].FirstOrDefault();
+        if (string.IsNullOrEmpty(authHeader) || !authHeader.StartsWith("Bearer "))
+        {
+            return Unauthorized("Missing or invalid Authorization header.");
+        }
+        var token = authHeader.Substring("Bearer ".Length).Trim();
+        var claims = _tokenService.GetClaimsFromToken(token);
+        if (claims == null)
+        {
+            return Unauthorized("Invalid or expired token.");
+        }
 
+        var userIdClaim = claims.FindFirst(ClaimTypes.NameIdentifier);
+        if (userIdClaim == null)
+        {
+            return Unauthorized("User ID claim not found.");
+        }
 
+        int user_id = int.Parse(userIdClaim.Value);
+        bool isFavourited = _usersRepository.IsFavourite(request.MalId, user_id);
+        return Ok(new { isFavourited });
+
+    }
 }
