@@ -93,19 +93,11 @@ public class UsersController : ControllerBase
 
     }
 
-    [Authorize]
-    [HttpPost("Favourites")]
-    public IActionResult Favourite([FromQuery] string mal_id)
+    [HttpPost("Favourite")]
+    public IActionResult Favourite(int mal_id, int user_id)
     {
-        var userId = User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value;
-
-        if (userId == null)
-        {
-            return Unauthorized(new { message = "User ID not found in token." });
-        }
-
-        var result = _usersRepository.FavouritesHandler(mal_id, int.Parse(userId));
-        return Ok(result);
+        object response = _usersRepository.FavouriteHandler(mal_id, user_id);
+        return Ok(response);
     }
 
 
