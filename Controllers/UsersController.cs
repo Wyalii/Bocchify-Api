@@ -95,7 +95,7 @@ public class UsersController : ControllerBase
     }
 
     [HttpPost("Favourite")]
-    public IActionResult Favourite([FromBody] FavouriteRequest request)
+    public IActionResult Favourite([FromBody] FavouriteRequestDto request)
     {
         var authHeader = Request.Headers["Authorization"].FirstOrDefault();
         if (string.IsNullOrEmpty(authHeader) || !authHeader.StartsWith("Bearer "))
@@ -121,7 +121,7 @@ public class UsersController : ControllerBase
         return Ok(response);
     }
     [HttpPost("CheckFavourite")]
-    public IActionResult CheckFavourite([FromBody] FavouriteRequest request)
+    public IActionResult CheckFavourite([FromBody] FavouriteRequestDto request)
     {
         var authHeader = Request.Headers["Authorization"].FirstOrDefault();
         if (string.IsNullOrEmpty(authHeader) || !authHeader.StartsWith("Bearer "))
@@ -146,4 +146,36 @@ public class UsersController : ControllerBase
         return Ok(new { isFavourited });
 
     }
+
+    [HttpPatch("UpdateProfile")]
+    public IActionResult UpdateProfile([FromBody] UpdateUserDto updateUserDto)
+    {
+        var authHeader = Request.Headers["Authorization"].FirstOrDefault();
+        if (string.IsNullOrEmpty(authHeader) || !authHeader.StartsWith("Bearer "))
+        {
+            return Unauthorized("Missing or invalid Authorization header.");
+        }
+        var token = authHeader.Substring("Bearer ".Length).Trim();
+        var claims = _tokenService.GetClaimsFromToken(token);
+        if (claims == null)
+        {
+            return Unauthorized("Invalid or expired token.");
+        }
+
+        var userIdClaim = claims.FindFirst(ClaimTypes.NameIdentifier);
+        if (userIdClaim == null)
+        {
+            return Unauthorized("User ID claim not found.");
+        }
+
+        int user_id = int.Parse(userIdClaim.Value);
+        User UpdatedUser = _usersRepository.UpdateUser(user_id, updateUserDto.Username, updateUserDto.Email, updateUserDto.Password, updateUserDto.ProfilePicture);
+        if (UpdatedUser == null)
+        {
+            return Unauthorized(new { message = "User not found." });
+        }
+        return Ok(new { message = $"Updated User: {UpdatedUser.Username}", UpdateUser = UpdatedUser });
+
+    }
+
 }

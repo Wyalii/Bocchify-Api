@@ -1,3 +1,4 @@
+using FluentEmail.Core;
 using MailKit;
 
 public class UsersRepository
@@ -80,6 +81,38 @@ public class UsersRepository
     public bool IsFavourite(int mal_id, int user_id)
     {
         return _context.Favourites.Any(f => f.Mal_Id == mal_id && f.UserId == user_id);
+    }
+
+    public User UpdateUser(int userId, string? username, string? email, string? password, string? profileImage)
+    {
+        User user = _context.Users.FirstOrDefault(u => u.Id == userId);
+        if (user == null)
+        {
+            return null;
+        }
+        if (!string.IsNullOrWhiteSpace(username))
+        {
+            user.Username = username;
+        }
+        if (!string.IsNullOrWhiteSpace(email))
+        {
+            user.Email = email;
+        }
+
+        if (!string.IsNullOrWhiteSpace(password))
+        {
+            string hashedPassword = _passwordService.HashPassword(password);
+            user.Password = hashedPassword;
+        }
+
+        if (!string.IsNullOrWhiteSpace(profileImage))
+        {
+
+            user.ProfileImage = profileImage;
+        }
+
+        _context.SaveChanges();
+        return user;
     }
     // public bool RemoveUser(int userId)
     // {
