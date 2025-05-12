@@ -33,7 +33,7 @@ public class TokenService
     {
         var tokenHandler = new JwtSecurityTokenHandler();
         var key = Encoding.UTF8.GetBytes(Environment.GetEnvironmentVariable("JWT_Secret"));
-
+        JwtSecurityTokenHandler.DefaultMapInboundClaims = true;
         try
         {
             ClaimsPrincipal principal = tokenHandler.ValidateToken(token, new TokenValidationParameters
@@ -45,7 +45,8 @@ public class TokenService
                 ValidIssuer = Environment.GetEnvironmentVariable("Jwt_Issuer"),
                 ValidAudience = Environment.GetEnvironmentVariable("Jwt_Audience"),
                 IssuerSigningKey = new SymmetricSecurityKey(key),
-                ClockSkew = TimeSpan.Zero
+                ClockSkew = TimeSpan.Zero,
+
             }, out SecurityToken validatedToken);
 
             return principal;

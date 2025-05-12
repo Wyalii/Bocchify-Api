@@ -11,6 +11,7 @@ var builder = WebApplication.CreateBuilder(args);
 var key = Encoding.UTF8.GetBytes(Environment.GetEnvironmentVariable("JWT_Secret"));
 
 string allowedOrigin = Environment.GetEnvironmentVariable("Allowed_Origin");
+string allowedOriginProd = Environment.GetEnvironmentVariable("Allowed_Origin_Prod");
 
 var connectionString = Environment.GetEnvironmentVariable("Database_Connection_String");
 
@@ -24,7 +25,7 @@ builder.Services.AddCors(options =>
 {
     options.AddPolicy("AllowedOrigin", policy =>
     {
-        policy.WithOrigins(allowedOrigin)
+        policy.WithOrigins(allowedOrigin, allowedOriginProd)
               .AllowAnyHeader()
               .AllowAnyMethod();
     });

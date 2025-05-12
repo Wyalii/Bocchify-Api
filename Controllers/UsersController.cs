@@ -1,6 +1,6 @@
 
+using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
-using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
 [ApiController]
@@ -170,11 +170,48 @@ public class UsersController : ControllerBase
 
         int user_id = int.Parse(userIdClaim.Value);
         User UpdatedUser = _usersRepository.UpdateUser(user_id, updateUserDto.Username, updateUserDto.Email, updateUserDto.Password, updateUserDto.ProfilePicture);
+        string updatedUserId = UpdatedUser.Id.ToString();
+        string newToken = _tokenService.GenerateToken(updatedUserId, UpdatedUser.Email);
+
         if (UpdatedUser == null)
         {
             return Unauthorized(new { message = "User not found." });
         }
-        return Ok(new { message = $"Updated User: {UpdatedUser.Username}", UpdateUser = UpdatedUser });
+        return Ok(new { message = $"Profile updated.", token = newToken, User = UpdatedUser });
+
+    }
+    [HttpPost("DecodeToken")]
+    public IActionResult DecodeToken()
+    {
+        var authHeader = Request.Headers["Authorization"].FirstOrDefault();
+        if (string.IsNullOrEmpty(authHeader) || !authHeader.StartsWith("Bearer "))
+        {
+            return Unauthorized("Missing or invalid Authorization header.");
+        }
+        var token = authHeader.Substring("Bearer ".Length).Trim();
+        var claims = _tokenService.GetClaimsFromToken(token);
+        if (claims == null)
+        {
+            return Unauthorized("Invalid or expired token.");
+        }
+
+        var userId = claims.FindFirst(ClaimTypes.NameIdentifier)?.Value
+          ?? claims.FindFirst(JwtRegisteredClaimNames.Sub)?.Value;
+
+        var email = claims.FindFirst(ClaimTypes.Email)?.Value
+                  ?? claims.FindFirst(JwtRegisteredClaimNames.Email)?.Value;
+
+
+        if (userId == null || email == null)
+        {
+            return Unauthorized("Required claims not found.");
+        }
+
+        return Ok(new
+        {
+            Id = userId,
+            Email = email
+        });
 
     }
 
