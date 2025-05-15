@@ -13,7 +13,7 @@ using System.Reflection;
 [assembly: System.Reflection.AssemblyCompanyAttribute("Bocchify_Server")]
 [assembly: System.Reflection.AssemblyConfigurationAttribute("Debug")]
 [assembly: System.Reflection.AssemblyFileVersionAttribute("1.0.0.0")]
-[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+db44c01ae1275b0904240ca29d57fb387bc0af0a")]
+[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+f01fca993cba39856bacb7194512d2fd5e00097c")]
 [assembly: System.Reflection.AssemblyProductAttribute("Bocchify_Server")]
 [assembly: System.Reflection.AssemblyTitleAttribute("Bocchify_Server")]
 [assembly: System.Reflection.AssemblyVersionAttribute("1.0.0.0")]
