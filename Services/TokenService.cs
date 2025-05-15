@@ -1,6 +1,8 @@
 using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
+using System.Security.Cryptography;
 using System.Text;
+using Microsoft.AspNetCore.WebUtilities;
 using Microsoft.IdentityModel.Tokens;
 
 public class TokenService
@@ -55,5 +57,19 @@ public class TokenService
         {
             return null;
         }
+    }
+
+    public string GeneratePasswordResetToken()
+    {
+        byte[] tokenBytes = new byte[32];
+        using (var rng = RandomNumberGenerator.Create())
+        {
+            rng.GetBytes(tokenBytes);
+        }
+
+        // Base64 URL-encode it (safe for use in URLs)
+        string token = WebEncoders.Base64UrlEncode(tokenBytes);
+
+        return token;
     }
 }

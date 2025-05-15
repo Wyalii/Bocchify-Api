@@ -215,4 +215,21 @@ public class UsersController : ControllerBase
 
     }
 
+    [HttpPost("ForgotPassword")]
+    public async Task<IActionResult> ForgotPassword(ChangePasswordDto dto)
+    {
+        User user = _usersRepository.GetUser(dto.Emaiil);
+        if (user == null)
+        {
+            return BadRequest(new { message = $"user with email: {dto.Emaiil} was not found." });
+        }
+        string token = _tokenService.GeneratePasswordResetToken();
+        string frontendUrl = "http://localhost:4200/change-password";
+        string resetLink = $"{frontendUrl}?token={token}&email={user.Email}";
+        string subject = "Reset your password";
+        string body = $"Click <a href='{resetLink}'>here</a> to reset your password.";
+        await _mailService.SendEmailAsync(user.Email, subject, body);
+        return Ok(new { message = "Reset password link sent to your email." });
+    }
+
 }
