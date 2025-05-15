@@ -1,4 +1,4 @@
 public class ChangePasswordDto
 {
-    public string Emaiil { get; set; }
+    public string Email { get; set; }
 }

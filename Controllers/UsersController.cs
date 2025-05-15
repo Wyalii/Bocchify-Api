@@ -218,10 +218,10 @@ public class UsersController : ControllerBase
     [HttpPost("ForgotPassword")]
     public async Task<IActionResult> ForgotPassword(ChangePasswordDto dto)
     {
-        User user = _usersRepository.GetUser(dto.Emaiil);
+        User user = _usersRepository.GetUser(dto.Email);
         if (user == null)
         {
-            return BadRequest(new { message = $"user with email: {dto.Emaiil} was not found." });
+            return BadRequest(new { message = $"user with email: {dto.Email} was not found." });
         }
         string token = _tokenService.GeneratePasswordResetToken();
         string frontendUrl = "http://localhost:4200/change-password";
@@ -231,5 +231,25 @@ public class UsersController : ControllerBase
         await _mailService.SendEmailAsync(user.Email, subject, body);
         return Ok(new { message = "Reset password link sent to your email." });
     }
+
+    [HttpPost("ResetPassword")]
+    public IActionResult ResetPassword([FromBody] ResetPasswordDto dto)
+    {
+        User user = _usersRepository.GetUser(dto.Email);
+        if (user == null)
+        {
+            return BadRequest(new { message = "Invalid email." });
+        }
+
+        User UpdatedUser = _usersRepository.UpdateUser(user.Id, password: dto.NewPassword);
+        if (UpdatedUser == null)
+        {
+            return BadRequest(new { message = "Unexpected error." });
+        }
+        return Ok(new { message = "Password successfully updated." });
+    }
+
+
+
 
 }

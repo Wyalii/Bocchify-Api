@@ -83,37 +83,52 @@ public class UsersRepository
         return _context.Favourites.Any(f => f.Mal_Id == mal_id && f.UserId == user_id);
     }
 
-    public User UpdateUser(int userId, string? username, string? email, string? password, string? profileImage)
+    public User UpdateUser(
+    int userId,
+    string? username = null,
+    string? email = null,
+    string? password = null,
+    string? profileImage = null)
     {
-        User user = _context.Users.FirstOrDefault(u => u.Id == userId);
-        if (user == null)
+        try
+        {
+            User user = _context.Users.FirstOrDefault(u => u.Id == userId);
+            if (user == null)
+            {
+                return null;
+            }
+
+            if (!string.IsNullOrWhiteSpace(username))
+            {
+                user.Username = username;
+            }
+
+            if (!string.IsNullOrWhiteSpace(email))
+            {
+                user.Email = email;
+            }
+
+            if (!string.IsNullOrWhiteSpace(password))
+            {
+                string hashedPassword = _passwordService.HashPassword(password);
+                user.Password = hashedPassword;
+            }
+
+            if (!string.IsNullOrWhiteSpace(profileImage))
+            {
+                user.ProfileImage = profileImage;
+            }
+
+            _context.SaveChanges();
+            return user;
+        }
+        catch (Exception ex)
         {
             return null;
         }
-        if (!string.IsNullOrWhiteSpace(username))
-        {
-            user.Username = username;
-        }
-        if (!string.IsNullOrWhiteSpace(email))
-        {
-            user.Email = email;
-        }
-
-        if (!string.IsNullOrWhiteSpace(password))
-        {
-            string hashedPassword = _passwordService.HashPassword(password);
-            user.Password = hashedPassword;
-        }
-
-        if (!string.IsNullOrWhiteSpace(profileImage))
-        {
-
-            user.ProfileImage = profileImage;
-        }
-
-        _context.SaveChanges();
-        return user;
     }
+
+
     // public bool RemoveUser(int userId)
     // {
 
