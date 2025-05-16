@@ -223,7 +223,13 @@ public class UsersController : ControllerBase
         {
             return BadRequest(new { message = $"user with email: {dto.Email} was not found." });
         }
+        if (user.PasswordResetTokenCreatedAt.HasValue &&
+        DateTime.UtcNow - user.PasswordResetTokenCreatedAt.Value < TimeSpan.FromMinutes(30))
+        {
+            return BadRequest(new { message = "Please wait before requesting another reset email." });
+        }
         string token = _tokenService.GeneratePasswordResetToken();
+        _usersRepository.UpdateUser(user.Id, passwordResetToken: token);
         string frontendUrl = "http://localhost:4200/change-password";
         string resetLink = $"{frontendUrl}?token={token}&email={user.Email}";
         string subject = "Reset your password";
@@ -240,8 +246,22 @@ public class UsersController : ControllerBase
         {
             return BadRequest(new { message = "Invalid email." });
         }
+        if (user.PasswordResetToken != dto.Token)
+        {
+            return BadRequest(new { message = "Invalid or expired token." });
+        }
+        if (!user.PasswordResetTokenCreatedAt.HasValue ||
+        DateTime.UtcNow - user.PasswordResetTokenCreatedAt.Value > TimeSpan.FromMinutes(30))
+        {
+            return BadRequest(new { message = "Reset token has expired." });
+        }
 
         User UpdatedUser = _usersRepository.UpdateUser(user.Id, password: dto.NewPassword);
+        bool clearedPasswordResetToken = _usersRepository.clearPasswordResetToken(UpdatedUser);
+        if (clearedPasswordResetToken == false)
+        {
+            return BadRequest(new { message = "User was not found." });
+        }
         if (UpdatedUser == null)
         {
             return BadRequest(new { message = "Unexpected error." });

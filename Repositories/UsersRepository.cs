@@ -88,7 +88,9 @@ public class UsersRepository
     string? username = null,
     string? email = null,
     string? password = null,
-    string? profileImage = null)
+    string? profileImage = null,
+    string? passwordResetToken = null
+    )
     {
         try
         {
@@ -118,6 +120,11 @@ public class UsersRepository
             {
                 user.ProfileImage = profileImage;
             }
+            if (!string.IsNullOrEmpty(passwordResetToken))
+            {
+                user.PasswordResetToken = passwordResetToken;
+                user.PasswordResetTokenCreatedAt = DateTime.UtcNow;
+            }
 
             _context.SaveChanges();
             return user;
@@ -126,6 +133,19 @@ public class UsersRepository
         {
             return null;
         }
+    }
+
+    public bool clearPasswordResetToken(User user)
+    {
+        User User = _context.Users.FirstOrDefault(u => u.Id == user.Id);
+        if (User == null)
+        {
+            return false;
+        }
+        User.PasswordResetToken = null;
+        User.PasswordResetTokenCreatedAt = null;
+        _context.SaveChanges();
+        return true;
     }
 
 
