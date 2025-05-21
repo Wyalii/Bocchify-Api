@@ -1,22 +1,21 @@
 
-using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
 using Microsoft.AspNetCore.Mvc;
 
 [ApiController]
 [Route("api/[controller]")]
-public class UsersController : ControllerBase
+
+public class FavouriteController : ControllerBase
 {
-    private readonly UsersRepository _usersRepository;
+    private readonly FavouritesRepository _favouritesRepository;
     private readonly TokenService _tokenService;
-    public UsersController(UsersRepository userRepository, TokenService tokenService)
+    public FavouriteController(FavouritesRepository favouritesRepository, TokenService tokenService)
     {
-        _usersRepository = userRepository;
+        _favouritesRepository = favouritesRepository;
         _tokenService = tokenService;
     }
-
-    [HttpPatch("UpdateProfile")]
-    public IActionResult UpdateProfile([FromBody] UpdateUserDto updateUserDto)
+    [HttpPost("Favourite")]
+    public IActionResult Favourite([FromBody] FavouriteRequestDto request)
     {
         var authHeader = Request.Headers["Authorization"].FirstOrDefault();
         if (string.IsNullOrEmpty(authHeader) || !authHeader.StartsWith("Bearer "))
@@ -37,19 +36,12 @@ public class UsersController : ControllerBase
         }
 
         int user_id = int.Parse(userIdClaim.Value);
-        User UpdatedUser = _usersRepository.UpdateUser(user_id, updateUserDto.Username, updateUserDto.Email, updateUserDto.Password, updateUserDto.ProfilePicture);
-        string updatedUserId = UpdatedUser.Id.ToString();
-        string newToken = _tokenService.GenerateToken(updatedUserId, UpdatedUser.Email);
 
-        if (UpdatedUser == null)
-        {
-            return Unauthorized(new { message = "User not found." });
-        }
-        return Ok(new { message = $"Profile updated.", token = newToken, User = UpdatedUser });
-
+        bool response = _favouritesRepository.FavouriteHandler(request.MalId, user_id);
+        return Ok(response);
     }
-    [HttpPost("DecodeToken")]
-    public IActionResult DecodeToken()
+    [HttpPost("CheckFavourite")]
+    public IActionResult CheckFavourite([FromBody] FavouriteRequestDto request)
     {
         var authHeader = Request.Headers["Authorization"].FirstOrDefault();
         if (string.IsNullOrEmpty(authHeader) || !authHeader.StartsWith("Bearer "))
@@ -63,23 +55,15 @@ public class UsersController : ControllerBase
             return Unauthorized("Invalid or expired token.");
         }
 
-        var userId = claims.FindFirst(ClaimTypes.NameIdentifier)?.Value
-          ?? claims.FindFirst(JwtRegisteredClaimNames.Sub)?.Value;
-
-        var email = claims.FindFirst(ClaimTypes.Email)?.Value
-                  ?? claims.FindFirst(JwtRegisteredClaimNames.Email)?.Value;
-
-
-        if (userId == null || email == null)
+        var userIdClaim = claims.FindFirst(ClaimTypes.NameIdentifier);
+        if (userIdClaim == null)
         {
-            return Unauthorized("Required claims not found.");
+            return Unauthorized("User ID claim not found.");
         }
 
-        return Ok(new
-        {
-            Id = userId,
-            Email = email
-        });
+        int user_id = int.Parse(userIdClaim.Value);
+        bool isFavourited = _favouritesRepository.IsFavourite(request.MalId, user_id);
+        return Ok(new { isFavourited });
 
     }
 }
