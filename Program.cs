@@ -56,7 +56,35 @@ builder.Services.AddScoped<MailService>();
 
 builder.Services.AddHttpClient();
 builder.Services.AddControllers();
-builder.Services.AddSwaggerGen();
+builder.Services.AddSwaggerGen(c =>
+{
+    c.SwaggerDoc("v1", new() { Title = "Your API", Version = "v1" });
+    c.AddSecurityDefinition("Bearer", new Microsoft.OpenApi.Models.OpenApiSecurityScheme
+    {
+        Name = "Authorization",
+        Type = SecuritySchemeType.Http,
+        Scheme = "Bearer",
+        BearerFormat = "JWT",
+        In = ParameterLocation.Header,
+        Description = "Enter 'Bearer' [space] and then your valid JWT token.\n\nExample: Bearer abcdef12345"
+    });
+
+    c.AddSecurityRequirement(new OpenApiSecurityRequirement
+    {
+        {
+            new OpenApiSecurityScheme
+            {
+                Reference = new OpenApiReference
+                {
+                    Type = ReferenceType.SecurityScheme,
+                    Id = "Bearer"
+                }
+            },
+            new string[] {}
+        }
+    });
+});
+
 
 var app = builder.Build();
 
@@ -71,6 +99,7 @@ if (app.Environment.IsDevelopment())
 app.UseRouting();
 app.UseAuthentication();
 app.UseAuthorization();
+
 
 app.UseEndpoints(endpoints =>
 {

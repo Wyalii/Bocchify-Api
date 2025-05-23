@@ -1,5 +1,6 @@
 
 using System.Security.Claims;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
 [ApiController]
@@ -14,56 +15,53 @@ public class FavouriteController : ControllerBase
         _favouritesRepository = favouritesRepository;
         _tokenService = tokenService;
     }
+    [Authorize]
     [HttpPost("Favourite")]
     public IActionResult Favourite([FromBody] FavouriteRequestDto request)
     {
-        var authHeader = Request.Headers["Authorization"].FirstOrDefault();
-        if (string.IsNullOrEmpty(authHeader) || !authHeader.StartsWith("Bearer "))
-        {
-            return Unauthorized("Missing or invalid Authorization header.");
-        }
-        var token = authHeader.Substring("Bearer ".Length).Trim();
-        var claims = _tokenService.GetClaimsFromToken(token);
-        if (claims == null)
-        {
-            return Unauthorized("Invalid or expired token.");
-        }
 
-        var userIdClaim = claims.FindFirst(ClaimTypes.NameIdentifier);
-        if (userIdClaim == null)
+        try
         {
-            return Unauthorized("User ID claim not found.");
+            var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier);
+            if (userIdClaim == null)
+            {
+                return Unauthorized("User ID claim not found.");
+            }
+
+            int user_id = int.Parse(userIdClaim.Value);
+
+            bool response = _favouritesRepository.FavouriteHandler(request.MalId, user_id);
+            return Ok(response);
         }
-
-        int user_id = int.Parse(userIdClaim.Value);
-
-        bool response = _favouritesRepository.FavouriteHandler(request.MalId, user_id);
-        return Ok(response);
+        catch (Exception ex)
+        {
+            return StatusCode(500, $"Internal server error: {ex.Message}");
+        }
     }
+    [Authorize]
     [HttpPost("CheckFavourite")]
     public IActionResult CheckFavourite([FromBody] FavouriteRequestDto request)
     {
-        var authHeader = Request.Headers["Authorization"].FirstOrDefault();
-        if (string.IsNullOrEmpty(authHeader) || !authHeader.StartsWith("Bearer "))
+        try
         {
-            return Unauthorized("Missing or invalid Authorization header.");
+            var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier);
+            if (userIdClaim == null)
+            {
+                return Unauthorized("User ID claim not found.");
+            }
+            int user_id = int.Parse(userIdClaim.Value);
+            bool isFavourited = _favouritesRepository.IsFavourite(request.MalId, user_id);
+            return Ok(new { isFavourited });
         }
-        var token = authHeader.Substring("Bearer ".Length).Trim();
-        var claims = _tokenService.GetClaimsFromToken(token);
-        if (claims == null)
+        catch (Exception ex)
         {
-            return Unauthorized("Invalid or expired token.");
+            return StatusCode(500, $"Internal server error: {ex.Message}");
         }
-
-        var userIdClaim = claims.FindFirst(ClaimTypes.NameIdentifier);
-        if (userIdClaim == null)
-        {
-            return Unauthorized("User ID claim not found.");
-        }
-
-        int user_id = int.Parse(userIdClaim.Value);
-        bool isFavourited = _favouritesRepository.IsFavourite(request.MalId, user_id);
-        return Ok(new { isFavourited });
 
     }
+    // [HttpGet("GetFavourites")]
+    // public IActionResult GetFavourites()
+    // {
+
+    // }
 }

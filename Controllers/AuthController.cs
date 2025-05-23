@@ -18,75 +18,99 @@ public class AuthController : ControllerBase
     [HttpPost("Register")]
     public IActionResult Register([FromBody] RegisterUserDto registerUserDto)
     {
-        User registratedUser = _usersRepository.CreateUser(registerUserDto.Username, registerUserDto.Email, registerUserDto.Password, registerUserDto.ProfileImage);
-        if (registratedUser == null)
+        try
         {
-            return BadRequest(new { message = "Problem On Registrating the user." });
-        }
-        if (String.IsNullOrWhiteSpace(registerUserDto.Username))
-        {
-            return BadRequest(new { message = "Invalid Username Input." });
-        }
-        if (String.IsNullOrWhiteSpace(registerUserDto.Password))
-        {
-            return BadRequest(new { message = "Invalid Password Input." });
-        }
-        if (String.IsNullOrEmpty(registerUserDto.ProfileImage))
-        {
-            return BadRequest(new { message = "profile image is null." });
-        }
-        string verificationUrl = $"http://localhost:5227/api/auth/verify?email={registratedUser.Email}";
-        _mailService.SendEmailAsync(registratedUser.Email, "Email Verification", $"<h1>Please verify your email by clicking the link below:</h1><a href='{verificationUrl}'");
+            User registratedUser = _usersRepository.CreateUser(registerUserDto.Username, registerUserDto.Email, registerUserDto.Password, registerUserDto.ProfileImage);
+            if (registratedUser == null)
+            {
+                return BadRequest(new { message = "Problem On Registrating the user." });
+            }
+            if (String.IsNullOrWhiteSpace(registerUserDto.Username))
+            {
+                return BadRequest(new { message = "Invalid Username Input." });
+            }
+            if (String.IsNullOrWhiteSpace(registerUserDto.Password))
+            {
+                return BadRequest(new { message = "Invalid Password Input." });
+            }
+            if (String.IsNullOrEmpty(registerUserDto.ProfileImage))
+            {
+                return BadRequest(new { message = "profile image is null." });
+            }
+            string verificationUrl = $"http://localhost:5227/api/auth/verify?email={registratedUser.Email}";
+            _mailService.SendEmailAsync(registratedUser.Email, "Email Verification", $"<h1>Please verify your email by clicking the link below:</h1><a href='{verificationUrl}'");
 
-        return Ok(new { message = $"User: {registratedUser.Username} has been registered." });
+            return Ok(new { message = $"User: {registratedUser.Username} has been registered." });
+        }
+        catch (Exception ex)
+        {
+
+            return StatusCode(500, $"Internal server error: {ex.Message}");
+        }
     }
 
     [HttpPost("Login")]
     public IActionResult Login([FromBody] LoginUserDto loginUserDto)
     {
-        User foundUser = _usersRepository.GetUser(loginUserDto.Email);
-        if (foundUser == null)
+        try
         {
-            return BadRequest(new { message = $"user with email: {loginUserDto.Email} not found." });
+            User foundUser = _usersRepository.GetUser(loginUserDto.Email);
+            if (foundUser == null)
+            {
+                return BadRequest(new { message = $"user with email: {loginUserDto.Email} not found." });
+            }
+            if (foundUser.Verified == false)
+            {
+                return BadRequest(new { message = "please check your email and verify your account first." });
+            }
+
+            bool correctPassword = _passwordService.VerifyPassword(loginUserDto.Password, foundUser.Password);
+            if (correctPassword == false)
+            {
+                return BadRequest(new { message = "Wrong password try again." });
+            }
+
+            string token = _tokenService.GenerateToken(foundUser.Id.ToString(), foundUser.Email);
+
+            return Ok(new { Name = foundUser.Username, message = $"User: {foundUser.Username} has logged in!", newToken = token, ProfileImage = foundUser.ProfileImage });
         }
-        if (foundUser.Verified == false)
+        catch (Exception ex)
         {
-            return BadRequest(new { message = "please check your email and verify your account first." });
+
+            return StatusCode(500, $"Internal server error: {ex.Message}");
         }
-
-        bool correctPassword = _passwordService.VerifyPassword(loginUserDto.Password, foundUser.Password);
-        if (correctPassword == false)
-        {
-            return BadRequest(new { message = "Wrong password try again." });
-        }
-
-        string token = _tokenService.GenerateToken(foundUser.Id.ToString(), foundUser.Email);
-
-        return Ok(new { Name = foundUser.Username, message = $"User: {foundUser.Username} has logged in!", newToken = token, ProfileImage = foundUser.ProfileImage });
     }
 
     [HttpGet("verify")]
     public IActionResult VerifyAccount([FromQuery] string email)
     {
-        if (string.IsNullOrEmpty(email))
+        try
         {
-            return BadRequest(new { message = "Email is missing." });
-        }
+            if (string.IsNullOrEmpty(email))
+            {
+                return BadRequest(new { message = "Email is missing." });
+            }
 
-        User user = _usersRepository.GetUser(email);
-        if (user == null)
+            User user = _usersRepository.GetUser(email);
+            if (user == null)
+            {
+                return BadRequest(new { message = "User not found." });
+            }
+
+            if (user.Verified)
+            {
+                return Ok(new { message = "Account is already verified." });
+            }
+
+            _usersRepository.UpdateUserVerificationStatus(user.Email);
+
+            return Redirect("http://localhost:4200/verified-success");
+        }
+        catch (Exception ex)
         {
-            return BadRequest(new { message = "User not found." });
+
+            return StatusCode(500, $"Internal server error: {ex.Message}");
         }
-
-        if (user.Verified)
-        {
-            return Ok(new { message = "Account is already verified." });
-        }
-
-        _usersRepository.UpdateUserVerificationStatus(user.Email);
-
-        return Redirect("http://localhost:4200/verified-success");
 
     }
 }
