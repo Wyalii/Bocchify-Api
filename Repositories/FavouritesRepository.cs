@@ -7,7 +7,7 @@ public class FavouritesRepository
     {
         _context = context;
     }
-    public bool FavouriteHandler(int mal_id, int user_id)
+    public bool FavouriteHandler(int mal_id, int user_id, string type)
     {
         User userExists = _context.Users.FirstOrDefault(u => u.Id == user_id);
         if (userExists == null)
@@ -21,7 +21,7 @@ public class FavouritesRepository
             _context.SaveChanges();
             return false;
         }
-        Favourite NewFavourite = new Favourite { Mal_Id = mal_id, UserId = user_id };
+        Favourite NewFavourite = new Favourite { Mal_Id = mal_id, UserId = user_id, Type = type };
         _context.Favourites.Add(NewFavourite);
         _context.SaveChanges();
         return true;

@@ -30,7 +30,7 @@ public class FavouriteController : ControllerBase
 
             int user_id = int.Parse(userIdClaim.Value);
 
-            bool response = _favouritesRepository.FavouriteHandler(request.MalId, user_id);
+            bool response = _favouritesRepository.FavouriteHandler(request.MalId, user_id, request.Type);
             return Ok(response);
         }
         catch (Exception ex)
@@ -59,9 +59,25 @@ public class FavouriteController : ControllerBase
         }
 
     }
-    // [HttpGet("GetFavourites")]
-    // public IActionResult GetFavourites()
-    // {
+    [Authorize]
+    [HttpGet("GetFavourites")]
+    public IActionResult GetFavourites()
+    {
+        try
+        {
+            var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier);
+            if (userIdClaim == null)
+            {
+                return Unauthorized("User ID claim not found.");
+            }
+            int user_id = int.Parse(userIdClaim.Value);
+            List<Favourite> favourites = _favouritesRepository.GetFavourites(user_id);
+            return Ok(favourites);
+        }
+        catch (Exception ex)
+        {
 
-    // }
+            return StatusCode(500, $"Internal server error: {ex.Message}");
+        }
+    }
 }
