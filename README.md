@@ -27,28 +27,31 @@ This is the backend API for the Anime & Manga app. It handles user authenticatio
 ---
 
 ## 🗂️ Project Structure (Simplified)
+
+```text
 📦 Bocchify-Api/
 ├── Controllers/
-│   ├── AuthController.cs         # Handles login, register, verifying of account
-│   └── FavouriteController.cs   # Handles adding/removing favourites/getting favourites
-|   └── PasswordController.cs    # Handles Password reset (forgot password feature)
-|   └── UserController.cs        # Handles Updating User Profile (changing name, profile image.)
+│   ├── AuthController.cs          # Handles login, register, verifying of account
+│   ├── FavouriteController.cs     # Handles adding/removing/getting favourites
+│   ├── PasswordController.cs      # Handles password reset (forgot password feature)
+│   └── UserController.cs          # Handles updating user profile (name, profile image)
 │
 ├── Models/
-│   ├── User.cs                   # User entity model
-│   └── Favourite.cs             # Favourite entity model
+│   ├── User.cs                    # User entity model
+│   └── Favourite.cs              # Favourite entity model
 │
 ├── Repositories/
-│   ├── UsersRepository.cs        # Data logic for users
-│   └── FavouritesRepository.cs   # Data logic for favourites
+│   ├── UsersRepository.cs         # Data logic for users
+│   └── FavouritesRepository.cs    # Data logic for favourites
 │
 ├── Services/
-│   ├── TokenService.cs           # JWT generation and validation
-│   ├── PasswordService.cs        # Password hashing/verification
-│   └── MailService.cs            # Sends password reset emails
+│   ├── TokenService.cs            # JWT generation and validation
+│   ├── PasswordService.cs         # Password hashing/verification
+│   └── MailService.cs             # Sends password reset emails
 │
 ├── appsettings.json              # App configuration (local)
 ├── Program.cs                    # Main app entry point (configures middleware, DI, auth)
 ├── .env                          # Environment variables (not committed)
-├── Bocchify_Server.csproj        # Project file
+└── Bocchify_Server.csproj        # Project file
+
 
