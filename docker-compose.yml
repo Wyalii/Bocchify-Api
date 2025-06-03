@@ -1,0 +1,27 @@
+version: '3.8'
+
+services:
+  api:
+    build:
+      context: ../dotnet-api
+    env_file:
+      - ../dotnet-api/.env
+    ports:
+      - "5000:5000"
+    networks:
+      - bocchify-net
+
+  frontend:
+    build:
+      context: ../angular-frontend
+    env_file:
+      - ../angular-frontend/.env
+    ports:
+      - "4000:4000"
+    depends_on:
+      - api
+    networks:
+      - bocchify-net
+
+networks:
+  bocchify-net:
