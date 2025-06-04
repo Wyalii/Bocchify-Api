@@ -8,6 +8,8 @@ public class AuthController : ControllerBase
     private readonly MailService _mailService;
     private readonly PasswordService _passwordService;
     private readonly TokenService _tokenService;
+    private readonly string frontendBaseUrl = "https://bocchify.netlify.app";
+    private readonly string backendBaseUrl = "https://bocchifyapi.onrender.com";
     public AuthController(UsersRepository usersRepository, MailService mailService, PasswordService passwordService, TokenService tokenService)
     {
         _usersRepository = usersRepository;
@@ -37,7 +39,7 @@ public class AuthController : ControllerBase
             {
                 return BadRequest(new { message = "profile image is null." });
             }
-            string verificationUrl = $"http://localhost:5227/api/auth/verify?email={registratedUser.Email}";
+            string verificationUrl = $"{backendBaseUrl}/api/auth/verify?email={registratedUser.Email}";
             _mailService.SendEmailAsync(registratedUser.Email, "Email Verification", $"<h1>Please verify your email by clicking the link below:</h1><a href='{verificationUrl}'");
 
             return Ok(new { message = $"User: {registratedUser.Username} has been registered." });
@@ -104,7 +106,7 @@ public class AuthController : ControllerBase
 
             _usersRepository.UpdateUserVerificationStatus(user.Email);
 
-            return Redirect("http://localhost:4200/verified-success");
+            return Redirect($"{frontendBaseUrl}/verified-success");
         }
         catch (Exception ex)
         {

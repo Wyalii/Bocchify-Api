@@ -8,6 +8,7 @@ public class PasswordController : ControllerBase
     private readonly UsersRepository _usersRepository;
     private readonly TokenService _tokenService;
     private readonly MailService _mailService;
+    private readonly string frontendBaseUrl = "https://bocchify.netlify.app";
     public PasswordController(UsersRepository userRepository, TokenService tokenService, MailService mailService)
     {
         _usersRepository = userRepository;
@@ -31,7 +32,7 @@ public class PasswordController : ControllerBase
             }
             string token = _tokenService.GeneratePasswordResetToken();
             _usersRepository.UpdateUser(user.Id, passwordResetToken: token);
-            string frontendUrl = "http://localhost:4200/change-password";
+            string frontendUrl = $"{frontendBaseUrl}/change-password";
             string resetLink = $"{frontendUrl}?token={token}&email={user.Email}";
             string subject = "Reset your password";
             string body = $"Click <a href='{resetLink}'>here</a> to reset your password.";
