@@ -116,4 +116,11 @@ public class AuthController : ControllerBase
         }
 
     }
+
+    [HttpGet("ping")]
+     public IActionResult Ping()
+     {
+        return Ok("Alive");
+     }
+
 }
