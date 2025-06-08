@@ -1,5 +1,6 @@
 
 using System.Security.Claims;
+using System.Threading.Tasks;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
@@ -17,7 +18,7 @@ public class FavouriteController : ControllerBase
     }
     [Authorize]
     [HttpPost("Favourite")]
-    public IActionResult Favourite([FromBody] FavouriteRequestDto request)
+    public async Task<IActionResult> Favourite([FromBody] FavouriteRequestDto request)
     {
 
         try
@@ -30,7 +31,7 @@ public class FavouriteController : ControllerBase
 
             int user_id = int.Parse(userIdClaim.Value);
 
-            bool response = _favouritesRepository.FavouriteHandler(request.MalId, user_id, request.Type);
+            bool response = await _favouritesRepository.FavouriteHandlerAsync(request.MalId, user_id, request.Type);
             return Ok(response);
         }
         catch (Exception ex)
@@ -40,7 +41,7 @@ public class FavouriteController : ControllerBase
     }
     [Authorize]
     [HttpPost("CheckFavourite")]
-    public IActionResult CheckFavourite([FromBody] FavouriteRequestDto request)
+    public async Task<IActionResult> CheckFavourite([FromBody] FavouriteRequestDto request)
     {
         try
         {
@@ -50,7 +51,7 @@ public class FavouriteController : ControllerBase
                 return Unauthorized("User ID claim not found.");
             }
             int user_id = int.Parse(userIdClaim.Value);
-            bool isFavourited = _favouritesRepository.IsFavourite(request.MalId, user_id);
+            bool isFavourited = await _favouritesRepository.IsFavouriteAsync(request.MalId, user_id);
             return Ok(new { isFavourited });
         }
         catch (Exception ex)
@@ -61,7 +62,7 @@ public class FavouriteController : ControllerBase
     }
     [Authorize]
     [HttpGet("GetFavourites")]
-    public IActionResult GetFavourites()
+    public async Task<IActionResult> GetFavourites()
     {
         try
         {
@@ -71,7 +72,7 @@ public class FavouriteController : ControllerBase
                 return Unauthorized("User ID claim not found.");
             }
             int user_id = int.Parse(userIdClaim.Value);
-            List<Favourite> favourites = _favouritesRepository.GetFavourites(user_id);
+            List<Favourite> favourites = await _favouritesRepository.GetFavouritesAsync(user_id);
             return Ok(favourites);
         }
         catch (Exception ex)

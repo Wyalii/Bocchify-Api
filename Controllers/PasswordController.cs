@@ -1,3 +1,4 @@
+using System.Threading.Tasks;
 using Microsoft.AspNetCore.Mvc;
 
 [ApiController]
@@ -20,7 +21,7 @@ public class PasswordController : ControllerBase
     {
         try
         {
-            User user = _usersRepository.GetUser(dto.Email);
+            User user = await _usersRepository.GetUserAsync(dto.Email);
             if (user == null)
             {
                 return BadRequest(new { message = $"user with email: {dto.Email} was not found." });
@@ -31,7 +32,7 @@ public class PasswordController : ControllerBase
                 return BadRequest(new { message = "Please wait before requesting another reset email." });
             }
             string token = _tokenService.GeneratePasswordResetToken();
-            _usersRepository.UpdateUser(user.Id, passwordResetToken: token);
+            await _usersRepository.UpdateUserAsync(user.Id, passwordResetToken: token);
             string frontendUrl = $"{frontendBaseUrl}/change-password";
             string resetLink = $"{frontendUrl}?token={token}&email={user.Email}";
             string subject = "Reset your password";
@@ -47,11 +48,11 @@ public class PasswordController : ControllerBase
     }
 
     [HttpPost("ResetPassword")]
-    public IActionResult ResetPassword([FromBody] ResetPasswordDto dto)
+    public async Task<IActionResult> ResetPassword([FromBody] ResetPasswordDto dto)
     {
         try
         {
-            User user = _usersRepository.GetUser(dto.Email);
+            User user = await _usersRepository.GetUserAsync(dto.Email);
             if (user == null)
             {
                 return BadRequest(new { message = "Invalid email." });
@@ -66,8 +67,8 @@ public class PasswordController : ControllerBase
                 return BadRequest(new { message = "Reset token has expired." });
             }
 
-            User UpdatedUser = _usersRepository.UpdateUser(user.Id, password: dto.NewPassword);
-            bool clearedPasswordResetToken = _usersRepository.clearPasswordResetToken(UpdatedUser);
+            User UpdatedUser = await _usersRepository.UpdateUserAsync(user.Id, password: dto.NewPassword);
+            bool clearedPasswordResetToken = await _usersRepository.ClearPasswordResetTokenAsync(UpdatedUser);
             if (clearedPasswordResetToken == false)
             {
                 return BadRequest(new { message = "User was not found." });

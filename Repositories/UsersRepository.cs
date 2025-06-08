@@ -1,8 +1,11 @@
+using Microsoft.EntityFrameworkCore;
+using System;
+using System.Threading.Tasks;
+
 public class UsersRepository
 {
     private readonly AppDbContext _context;
     private readonly PasswordService _passwordService;
-
 
     public UsersRepository(AppDbContext context, PasswordService passwordService)
     {
@@ -10,17 +13,17 @@ public class UsersRepository
         _passwordService = passwordService;
     }
 
-    public User CreateUser(string username, string email, string password, string profileImage)
+    public async Task<User?> CreateUserAsync(string username, string email, string password, string profileImage)
     {
-        User ExistingUser = _context.Users.FirstOrDefault(u => u.Email == email);
-        if (ExistingUser != null)
+        var existingUser = await _context.Users.FirstOrDefaultAsync(u => u.Email == email);
+        if (existingUser != null)
         {
             return null;
         }
 
-        string hashedPassword = _passwordService.HashPassword(password);
+        var hashedPassword = _passwordService.HashPassword(password);
 
-        User NewUser = new User
+        var newUser = new User
         {
             Username = username,
             Email = email,
@@ -29,100 +32,82 @@ public class UsersRepository
             ProfileImage = profileImage
         };
 
-        _context.Users.Add(NewUser);
-        _context.SaveChanges();
-        return NewUser;
+        await _context.Users.AddAsync(newUser);
+        await _context.SaveChangesAsync();
+        return newUser;
     }
 
-    public User GetUser(string email)
+    public async Task<User?> GetUserAsync(string email)
     {
-        User foundUser = _context.Users.FirstOrDefault(u => u.Email == email);
-        if (foundUser == null)
-        {
-            return null;
-        }
-
-        return foundUser;
+        return await _context.Users.FirstOrDefaultAsync(u => u.Email == email);
     }
 
-    public bool UpdateUserVerificationStatus(string email)
+    public async Task<bool> UpdateUserVerificationStatusAsync(string email)
     {
-        User user = _context.Users.FirstOrDefault(u => u.Email == email);
+        var user = await _context.Users.FirstOrDefaultAsync(u => u.Email == email);
         if (user == null) return false;
 
         user.Verified = true;
         _context.Users.Update(user);
-        _context.SaveChanges();
+        await _context.SaveChangesAsync();
         return true;
     }
-    public User UpdateUser(
-    int userId,
-    string? username = null,
-    string? email = null,
-    string? password = null,
-    string? profileImage = null,
-    string? passwordResetToken = null
+
+    public async Task<User?> UpdateUserAsync(
+        int userId,
+        string? username = null,
+        string? email = null,
+        string? password = null,
+        string? profileImage = null,
+        string? passwordResetToken = null
     )
     {
         try
         {
-            User user = _context.Users.FirstOrDefault(u => u.Id == userId);
+            var user = await _context.Users.FirstOrDefaultAsync(u => u.Id == userId);
             if (user == null)
             {
                 return null;
             }
 
             if (!string.IsNullOrWhiteSpace(username))
-            {
                 user.Username = username;
-            }
 
             if (!string.IsNullOrWhiteSpace(email))
-            {
                 user.Email = email;
-            }
 
             if (!string.IsNullOrWhiteSpace(password))
-            {
-                string hashedPassword = _passwordService.HashPassword(password);
-                user.Password = hashedPassword;
-            }
+                user.Password = _passwordService.HashPassword(password);
 
             if (!string.IsNullOrWhiteSpace(profileImage))
-            {
                 user.ProfileImage = profileImage;
-            }
+
             if (!string.IsNullOrEmpty(passwordResetToken))
             {
                 user.PasswordResetToken = passwordResetToken;
                 user.PasswordResetTokenCreatedAt = DateTime.UtcNow;
             }
 
-            _context.SaveChanges();
+            await _context.SaveChangesAsync();
             return user;
         }
-        catch (Exception ex)
+        catch
         {
             return null;
         }
     }
 
-    public bool clearPasswordResetToken(User user)
+    public async Task<bool> ClearPasswordResetTokenAsync(User user)
     {
-        User User = _context.Users.FirstOrDefault(u => u.Id == user.Id);
-        if (User == null)
+        var existingUser = await _context.Users.FirstOrDefaultAsync(u => u.Id == user.Id);
+        if (existingUser == null)
         {
             return false;
         }
-        User.PasswordResetToken = null;
-        User.PasswordResetTokenCreatedAt = null;
-        _context.SaveChanges();
+
+        existingUser.PasswordResetToken = null;
+        existingUser.PasswordResetTokenCreatedAt = null;
+        await _context.SaveChangesAsync();
         return true;
     }
-
-
-    // public bool RemoveUser(int userId)
-    // {
-
-    // }
 }

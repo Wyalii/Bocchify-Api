@@ -1,3 +1,4 @@
+using System.Threading.Tasks;
 using Microsoft.AspNetCore.Mvc;
 
 [ApiController]
@@ -18,11 +19,11 @@ public class AuthController : ControllerBase
         _tokenService = tokenService;
     }
     [HttpPost("Register")]
-    public IActionResult Register([FromBody] RegisterUserDto registerUserDto)
+    public async Task<IActionResult> Register([FromBody] RegisterUserDto registerUserDto)
     {
         try
         {
-            User registratedUser = _usersRepository.CreateUser(registerUserDto.Username, registerUserDto.Email, registerUserDto.Password, registerUserDto.ProfileImage);
+            User registratedUser = await _usersRepository.CreateUserAsync(registerUserDto.Username, registerUserDto.Email, registerUserDto.Password, registerUserDto.ProfileImage);
             if (registratedUser == null)
             {
                 return BadRequest(new { message = "Problem On Registrating the user." });
@@ -52,11 +53,11 @@ public class AuthController : ControllerBase
     }
 
     [HttpPost("Login")]
-    public IActionResult Login([FromBody] LoginUserDto loginUserDto)
+    public async Task<IActionResult> Login([FromBody] LoginUserDto loginUserDto)
     {
         try
         {
-            User foundUser = _usersRepository.GetUser(loginUserDto.Email);
+            User foundUser = await _usersRepository.GetUserAsync(loginUserDto.Email);
             if (foundUser == null)
             {
                 return BadRequest(new { message = $"user with email: {loginUserDto.Email} not found." });
@@ -84,7 +85,7 @@ public class AuthController : ControllerBase
     }
 
     [HttpGet("verify")]
-    public IActionResult VerifyAccount([FromQuery] string email)
+    public async Task<IActionResult> VerifyAccount([FromQuery] string email)
     {
         try
         {
@@ -93,7 +94,7 @@ public class AuthController : ControllerBase
                 return BadRequest(new { message = "Email is missing." });
             }
 
-            User user = _usersRepository.GetUser(email);
+            User user = await _usersRepository.GetUserAsync(email);
             if (user == null)
             {
                 return BadRequest(new { message = "User not found." });
@@ -104,7 +105,7 @@ public class AuthController : ControllerBase
                 return Ok(new { message = "Account is already verified." });
             }
 
-            _usersRepository.UpdateUserVerificationStatus(user.Email);
+            await _usersRepository.UpdateUserVerificationStatusAsync(user.Email);
 
             return Redirect($"{frontendBaseUrl}/verified-success");
         }
