@@ -1,0 +1,12 @@
+{
+  "Version": 1,
+  "Hash": "oz1tYjZD5vSRoqgnNiVbruJlB5hk7r8yY+tc9wjUfWo=",
+  "Source": "Bocchify-Api",
+  "BasePath": "_content/Bocchify-Api",
+  "Mode": "Default",
+  "ManifestType": "Build",
+  "ReferencedProjectsConfiguration": [],
+  "DiscoveryPatterns": [],
+  "Assets": [],
+  "Endpoints": []
+}
