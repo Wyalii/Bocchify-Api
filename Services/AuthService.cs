@@ -1,3 +1,4 @@
+using System.Security.Claims;
 using Bocchify_Api.AppContext;
 using Bocchify_Api.Contracts;
 using Bocchify_Api.DTOS;
@@ -25,6 +26,42 @@ namespace Bocchify_Api.Services
         }
         public async Task<BaseResponse<UserDTO>> RegisterAsync(RegisterUser RegisterRequest)
         {
+            // Null checks for dependencies
+            if (_context == null)
+            {
+                return new BaseResponse<UserDTO>
+                {
+                    Success = false,
+                    Message = "Database context (_context) is not initialized."
+                };
+            }
+
+            if (_emailService == null)
+            {
+                return new BaseResponse<UserDTO>
+                {
+                    Success = false,
+                    Message = "Email service (_emailService) is not initialized."
+                };
+            }
+
+            if (_passwordService == null)
+            {
+                return new BaseResponse<UserDTO>
+                {
+                    Success = false,
+                    Message = "Password service (_passwordService) is not initialized."
+                };
+            }
+
+            if (_tokenService == null)
+            {
+                return new BaseResponse<UserDTO>
+                {
+                    Success = false,
+                    Message = "Token service (_tokenService) is not initialized."
+                };
+            }
             if (string.IsNullOrWhiteSpace(RegisterRequest.Username))
             {
                 return new BaseResponse<UserDTO>
@@ -109,9 +146,18 @@ namespace Bocchify_Api.Services
             };
 
             await _context.Users.AddAsync(NewUser);
-            await _context.SaveChangesAsync();
             string VerifyToken = await _tokenService.GenerateVerifyToken();
+            VerifyToken verifyToken = new VerifyToken
+            {
+                UserId = NewUser.Id,
+                Token = VerifyToken,
+                ExpiresAt = DateTime.UtcNow.AddHours(1),
+                CreatedAt = DateTime.UtcNow
+            };
+            await _context.VerifyTokens.AddAsync(verifyToken);
             await _emailService.SendVerificationEmail(NewUser.Email, NewUser.Username, VerifyToken);
+            await _context.SaveChangesAsync();
+
             return new BaseResponse<UserDTO>
             {
                 Success = true,
@@ -198,14 +244,86 @@ namespace Bocchify_Api.Services
             };
 
         }
-        public Task<BaseResponse<UserDTO>> LogoutAsync()
+        public async Task<BaseResponse<UserDTO>> LogoutAsync(int UserId)
         {
-            throw new NotImplementedException();
+            User user = await _context.Users.FirstOrDefaultAsync(u => u.Id == UserId);
+            if (user == null)
+            {
+                return new BaseResponse<UserDTO>()
+                {
+                    Success = false,
+                    Message = "User Doesn't exists.",
+                    Data = null
+                };
+            }
+
+            user.RefreshToken = null;
+            user.RefreshTokenExpiry = null;
+            _context.SaveChanges();
+            UserDTO userDTO = new UserDTO()
+            {
+                Id = user.Id,
+                Username = user.Username,
+                Email = user.Username,
+                Avatar = user.Avatar
+            };
+            return new BaseResponse<UserDTO>()
+            {
+                Data = userDTO,
+                Success = true,
+                Message = $"User: {userDTO.Username} Logged Out."
+            };
         }
 
-        public Task<BaseResponse<UserDTO>> VerifyUserAsync(GenericEmail VerifyRequest)
+        public async Task<BaseResponse<UserDTO>> VerifyUserAsync(VerifyUser VerifyRequest)
         {
-            throw new NotImplementedException();
+            VerifyToken verifyToken = await _context.VerifyTokens.FirstOrDefaultAsync(vf => vf.Token == VerifyRequest.VerifyToken);
+            if (verifyToken == null)
+            {
+                return new BaseResponse<UserDTO>
+                {
+                    Data = null,
+                    Success = false,
+                    Message = "Invalid Verify token."
+                };
+            }
+
+            if (verifyToken.ExpiresAt <= DateTime.Now)
+            {
+                return new BaseResponse<UserDTO>
+                {
+                    Data = null,
+                    Success = false,
+                    Message = "Expired verify token."
+                };
+            }
+
+            User user = await _context.Users.FirstOrDefaultAsync(u => u.Id == verifyToken.UserId);
+            if (user == null)
+            {
+                return new BaseResponse<UserDTO>
+                {
+                    Data = null,
+                    Success = false,
+                    Message = "invalid user on verification."
+                };
+            }
+
+            user.IsVerified = true;
+            UserDTO userDTO = new UserDTO
+            {
+                Id = user.Id,
+                Username = user.Username,
+                Email = user.Email,
+                Avatar = user.Avatar
+            };
+            await _context.SaveChangesAsync();
+            return new BaseResponse<UserDTO>
+            {
+                Data = userDTO,
+                Success = true,
+                Message = $"User: {userDTO.Username} verified!"
+            };
         }
         public Task<BaseResponse<UserDTO>> ChangePassword(ChangePassword ChangePasswordRequest)
         {

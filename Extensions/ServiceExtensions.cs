@@ -19,7 +19,8 @@ namespace Bocchify_Api.Extensions
             string Jwt_Audience = Environment.GetEnvironmentVariable("JWT_AUDIENCE")!;
             string Jwt_Issuer = Environment.GetEnvironmentVariable("JWT_ISSUER")!;
             string Jwt_Secret = Environment.GetEnvironmentVariable("JWT_SECRET")!;
-            if (ConnectionString == null || Jwt_Audience == null || Jwt_Issuer == null || Jwt_Secret == null)
+            if (string.IsNullOrEmpty(ConnectionString) || string.IsNullOrEmpty(Jwt_Audience) ||
+                string.IsNullOrEmpty(Jwt_Issuer) || string.IsNullOrEmpty(Jwt_Secret))
             {
                 throw new Exception("Missing required environment variables.");
             }
