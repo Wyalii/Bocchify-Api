@@ -79,25 +79,6 @@ namespace Bocchify_Api.Services
                 };
             }
 
-            User NewUser = new User()
-            {
-                Username = RegisterRequest.Username,
-                Email = RegisterRequest.Email,
-                Avatar = RegisterRequest.Avatar,
-                PasswordHash = _passwordService.HashPassword(RegisterRequest.Password),
-                RefreshToken = null,
-                RefreshTokenExpiry = null,
-                Favourites = null
-            };
-
-            UserDTO NewUserDto = new UserDTO()
-            {
-                Username = RegisterRequest.Username,
-                Email = RegisterRequest.Email,
-                Avatar = RegisterRequest.Avatar,
-                Favourites = null
-            };
-
             User AlreadyRegistered = await _context.Users.FirstOrDefaultAsync(u => u.Email == RegisterRequest.Email);
             if (AlreadyRegistered != null)
             {
@@ -107,6 +88,25 @@ namespace Bocchify_Api.Services
                     Message = "Email is already used (registered).",
                 };
             }
+
+            User NewUser = new User()
+            {
+                Username = RegisterRequest.Username,
+                Email = RegisterRequest.Email,
+                Avatar = RegisterRequest.Avatar,
+                PasswordHash = _passwordService.HashPassword(RegisterRequest.Password),
+                RefreshToken = null,
+                RefreshTokenExpiry = null,
+
+            };
+
+            UserDTO NewUserDto = new UserDTO()
+            {
+                Username = RegisterRequest.Username,
+                Email = RegisterRequest.Email,
+                Avatar = RegisterRequest.Avatar,
+
+            };
 
             await _context.Users.AddAsync(NewUser);
             await _context.SaveChangesAsync();
@@ -119,9 +119,84 @@ namespace Bocchify_Api.Services
                 Data = NewUserDto
             };
         }
-        public Task<BaseResponse<UserDTO>> LoginAsync(LoginUser LoginRequest)
+        public async Task<BaseResponse<object>> LoginAsync(LoginUser LoginRequest)
         {
-            throw new NotImplementedException();
+            if (!_emailService.IsValidEmail(LoginRequest.Email))
+            {
+                return new BaseResponse<object>
+                {
+                    Success = false,
+                    Message = "Email format is invalid."
+                };
+            }
+
+            if (string.IsNullOrWhiteSpace(LoginRequest.Password))
+            {
+
+                return new BaseResponse<object>
+                {
+                    Success = false,
+                    Message = "Password format is invalid."
+                };
+            }
+
+            User user = await _context.Users.FirstOrDefaultAsync(u => u.Email == LoginRequest.Email);
+            if (user == null)
+            {
+                return new BaseResponse<object>
+                {
+                    Success = false,
+                    Message = "user with provided email is not registered."
+                };
+            }
+
+            bool CorrectPassword = _passwordService.VerifyPassword(LoginRequest.Password, user.PasswordHash);
+            if (!CorrectPassword)
+            {
+                return new BaseResponse<object>
+                {
+                    Success = false,
+                    Message = "incorrect password."
+                };
+            }
+            string AccessToken = await _tokenService.GenerateAccessToken(user);
+
+            if (user.RefreshTokenExpiry == null || user.RefreshTokenExpiry <= DateTime.UtcNow)
+            {
+                string RefreshToken = await _tokenService.GenerateRefreshToken();
+                user.RefreshToken = RefreshToken;
+                user.RefreshTokenExpiry = DateTime.UtcNow.AddDays(7);
+            }
+
+            await _context.SaveChangesAsync();
+
+            UserDTO userDto = new UserDTO()
+            {
+                Username = user.Username,
+                Email = user.Email,
+                Avatar = user.Avatar,
+
+            };
+
+            var responseData = new
+            {
+                User = new UserDTO
+                {
+                    Id = user.Id,
+                    Username = user.Username,
+                    Email = user.Email
+                },
+                accessToken = AccessToken,
+
+            };
+
+            return new BaseResponse<object>
+            {
+                Success = true,
+                Message = "Login successful.",
+                Data = responseData
+            };
+
         }
         public Task<BaseResponse<UserDTO>> LogoutAsync()
         {

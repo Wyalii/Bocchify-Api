@@ -19,6 +19,16 @@ namespace Bocchify_Api.Endpoints
                 return Results.Created($"/users/{result.Data.Id}", new { result.Message });
             });
 
+            app.MapPost("/login", async (LoginUser loginUserRequest, IAuthService authService) =>
+            {
+                BaseResponse<object> result = await authService.LoginAsync(loginUserRequest);
+                if (result == null)
+                {
+                    return Results.BadRequest(new { message = result?.Message ?? "Login failed" });
+                }
+                return Results.Ok(result);
+            });
+
             return app;
         }
 

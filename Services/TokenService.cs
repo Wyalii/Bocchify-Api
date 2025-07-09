@@ -1,29 +1,59 @@
+using System.IdentityModel.Tokens.Jwt;
+using System.Security.Claims;
 using System.Security.Cryptography;
+using System.Text;
 using Bocchify_Api.Interfaces;
+using Bocchify_Api.Models;
+using Microsoft.IdentityModel.Tokens;
+using Org.BouncyCastle.Asn1.Sec;
 
 namespace Bocchify_Api.Services
 {
     public class TokenService : ITokenService
     {
-        public Task<string> GenerateAccessToken()
+        public Task<string> GenerateAccessToken(User user)
         {
-            throw new NotImplementedException();
+            var secret = Environment.GetEnvironmentVariable("JWT_SECRET");
+            if (string.IsNullOrWhiteSpace(secret))
+            {
+                throw new InvalidOperationException("JWT_SECRET environment variable is not set.");
+            }
+            var tokenHandler = new JwtSecurityTokenHandler();
+            var key = Encoding.ASCII.GetBytes(secret);
+
+
+            var tokenDescriptor = new SecurityTokenDescriptor
+            {
+                Subject = new ClaimsIdentity(new[]
+                {
+                 new Claim(ClaimTypes.NameIdentifier, user.Id.ToString()),
+                 new Claim(ClaimTypes.Email, user.Email),
+                }),
+                Expires = DateTime.UtcNow.AddMinutes(60),
+                SigningCredentials = new SigningCredentials(new SymmetricSecurityKey(key), SecurityAlgorithms.HmacSha256Signature)
+            };
+
+            var token = tokenHandler.CreateToken(tokenDescriptor);
+            return Task.FromResult(tokenHandler.WriteToken(token));
         }
+
 
         public Task<string> GeneratePasswordResetToken()
         {
-            throw new NotImplementedException();
+            var token = Convert.ToBase64String(RandomNumberGenerator.GetBytes(32));
+            return Task.FromResult(token);
         }
 
         public Task<string> GenerateRefreshToken()
         {
-            throw new NotImplementedException();
+            var token = Convert.ToBase64String(RandomNumberGenerator.GetBytes(32));
+            return Task.FromResult(token);
         }
 
-        public async Task<string> GenerateVerifyToken()
+        public Task<string> GenerateVerifyToken()
         {
-            var token = Convert.ToBase64String(RandomNumberGenerator.GetBytes(64));
-            return await Task.FromResult(token);
+            var token = Convert.ToBase64String(RandomNumberGenerator.GetBytes(32));
+            return Task.FromResult(token);
         }
     }
 }
