@@ -19,6 +19,8 @@ namespace Bocchify_Api.Extensions
             string Jwt_Audience = Environment.GetEnvironmentVariable("JWT_AUDIENCE")!;
             string Jwt_Issuer = Environment.GetEnvironmentVariable("JWT_ISSUER")!;
             string Jwt_Secret = Environment.GetEnvironmentVariable("JWT_SECRET")!;
+            Console.WriteLine("JWT_SECRET: " + Jwt_Secret);
+
             if (string.IsNullOrEmpty(ConnectionString) || string.IsNullOrEmpty(Jwt_Audience) ||
                 string.IsNullOrEmpty(Jwt_Issuer) || string.IsNullOrEmpty(Jwt_Secret))
             {
@@ -63,6 +65,20 @@ namespace Bocchify_Api.Extensions
                     BearerFormat = "JWT",
                     In = Microsoft.OpenApi.Models.ParameterLocation.Header,
                     Description = "Enter 'Bearer' followed by your access token. Example: Bearer {your_token}"
+                });
+                c.AddSecurityRequirement(new Microsoft.OpenApi.Models.OpenApiSecurityRequirement
+                {
+                    {
+                        new Microsoft.OpenApi.Models.OpenApiSecurityScheme
+                        {
+                            Reference = new Microsoft.OpenApi.Models.OpenApiReference
+                            {
+                                Type = Microsoft.OpenApi.Models.ReferenceType.SecurityScheme,
+                                Id = "Bearer"
+                            }
+                        },
+                        new string[] {}
+                    }
                 });
             });
         }

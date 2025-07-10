@@ -14,6 +14,13 @@ namespace Bocchify_Api.Services
         public Task<string> GenerateAccessToken(User user)
         {
             var secret = Environment.GetEnvironmentVariable("JWT_SECRET");
+            var issuer = Environment.GetEnvironmentVariable("JWT_ISSUER");
+            var audience = Environment.GetEnvironmentVariable("JWT_AUDIENCE");
+
+            Console.WriteLine("JWT_SECRET: " + secret);
+            Console.WriteLine("JWT_ISSUER: " + issuer);
+            Console.WriteLine("JWT_AUDIENCE: " + audience);
+
             if (string.IsNullOrWhiteSpace(secret))
             {
                 throw new InvalidOperationException("JWT_SECRET environment variable is not set.");
@@ -26,11 +33,13 @@ namespace Bocchify_Api.Services
             {
                 Subject = new ClaimsIdentity(new[]
                 {
-                 new Claim(ClaimTypes.NameIdentifier, user.Id.ToString()),
-                 new Claim(ClaimTypes.Email, user.Email),
+                 new Claim("nameid", user.Id.ToString()),
+                 new Claim("email", user.Email),
                 }),
                 Expires = DateTime.UtcNow.AddMinutes(60),
-                SigningCredentials = new SigningCredentials(new SymmetricSecurityKey(key), SecurityAlgorithms.HmacSha256Signature)
+                SigningCredentials = new SigningCredentials(new SymmetricSecurityKey(key), SecurityAlgorithms.HmacSha256Signature),
+                Issuer = issuer,
+                Audience = audience,
             };
 
             var token = tokenHandler.CreateToken(tokenDescriptor);

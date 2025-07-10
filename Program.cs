@@ -13,7 +13,11 @@ if (app.Environment.IsDevelopment())
     });
 }
 
+app.UseAuthentication();
+app.UseAuthorization();
 app.UseHttpsRedirection();
 app.MapGroup("/api/v1").WithTags("Auth Endpoints").MapAuthEndPoint();
 app.Run();
+
+
 

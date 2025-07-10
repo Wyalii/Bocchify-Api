@@ -321,6 +321,7 @@ namespace Bocchify_Api.Services
             }
 
             user.IsVerified = true;
+            _context.VerifyTokens.Remove(verifyToken);
             UserDTO userDTO = new UserDTO
             {
                 Id = user.Id,
@@ -336,14 +337,126 @@ namespace Bocchify_Api.Services
                 Message = $"User: {userDTO.Username} verified!"
             };
         }
-        public Task<BaseResponse<UserDTO>> ChangePassword(ChangePassword ChangePasswordRequest)
+        public async Task<BaseResponse<UserDTO>> ChangePassword(ChangePassword ChangePasswordRequest)
         {
-            throw new NotImplementedException();
+            PasswordResetToken passwordResetToken = await _context.PasswordResetTokens.FirstOrDefaultAsync(prt => prt.Token == ChangePasswordRequest.Token);
+            if (passwordResetToken == null)
+            {
+                return new BaseResponse<UserDTO>
+                {
+                    Data = null,
+                    Success = false,
+                    Message = "Invalid token."
+                };
+            }
+
+            if (passwordResetToken.ExpiresAt <= DateTime.UtcNow)
+            {
+                return new BaseResponse<UserDTO>
+                {
+                    Data = null,
+                    Success = false,
+                    Message = "Expired token."
+                };
+            }
+
+            User user = await _context.Users.FirstOrDefaultAsync(u => u.Id == passwordResetToken.UserId);
+            if (user == null)
+            {
+
+                return new BaseResponse<UserDTO>
+                {
+                    Data = null,
+                    Success = false,
+                    Message = "user doesn't exists."
+                };
+            }
+
+            bool IsPasswordValid = _passwordService.VerifyPassword(ChangePasswordRequest.CurrentPassword, user.PasswordHash);
+            if (!IsPasswordValid)
+            {
+                return new BaseResponse<UserDTO>
+                {
+                    Data = null,
+                    Success = false,
+                    Message = "incorrect current password."
+                };
+            }
+
+            string NewHashPassword = _passwordService.HashPassword(ChangePasswordRequest.NewPassword);
+            user.PasswordHash = NewHashPassword;
+            _context.PasswordResetTokens.Remove(passwordResetToken);
+            await _context.SaveChangesAsync();
+            UserDTO userDTO = new UserDTO
+            {
+                Id = user.Id,
+                Username = user.Username,
+                Email = user.Email,
+                Avatar = user.Avatar
+            };
+            return new BaseResponse<UserDTO>
+            {
+                Data = userDTO,
+                Success = true,
+                Message = "password changed succesfully!."
+            };
         }
 
-        public Task<BaseResponse<UserDTO>> ForgotPassword(GenericEmail ForgotPasswordRequest)
+        public async Task<BaseResponse<UserDTO>> ForgotPassword(GenericEmail ForgotPasswordRequest)
         {
-            throw new NotImplementedException();
+            User user = await _context.Users.FirstOrDefaultAsync(u => u.Email == ForgotPasswordRequest.Email);
+            if (user == null)
+            {
+                return new BaseResponse<UserDTO>
+                {
+                    Data = null,
+                    Success = false,
+                    Message = $"user with email: {ForgotPasswordRequest.Email} was not found."
+                };
+            }
+
+            PasswordResetToken passwordResetToken = await _context.PasswordResetTokens.FirstOrDefaultAsync(prt => prt.UserId == user.Id);
+            if (passwordResetToken != null)
+            {
+                if (passwordResetToken.ExpiresAt > DateTime.UtcNow)
+                {
+
+                    return new BaseResponse<UserDTO>
+                    {
+                        Data = null,
+                        Success = false,
+                        Message = "A password reset email was already sent and is still valid. Please check your inbox."
+                    };
+                }
+                _context.PasswordResetTokens.Remove(passwordResetToken);
+                _context.SaveChangesAsync();
+            }
+
+            string NewPasswordResetToken = await _tokenService.GeneratePasswordResetToken();
+            PasswordResetToken NewPasswordResetTokenEntity = new PasswordResetToken
+            {
+                UserId = user.Id,
+                Token = NewPasswordResetToken,
+                ExpiresAt = DateTime.UtcNow.AddHours(1),
+                CreatedAt = DateTime.UtcNow,
+            };
+            _context.PasswordResetTokens.Add(NewPasswordResetTokenEntity);
+            _context.SaveChangesAsync();
+
+            UserDTO userDTO = new UserDTO
+            {
+                Id = user.Id,
+                Username = user.Username,
+                Email = user.Email,
+                Avatar = user.Avatar
+            };
+            await _emailService.SendPasswordResetEmail(user.Email, user.Username, NewPasswordResetTokenEntity.Token);
+            return new BaseResponse<UserDTO>
+            {
+                Data = userDTO,
+                Success = true,
+                Message = "Forgot password reset is sent, please check your email!"
+            };
         }
 
         public async Task<BaseResponse<UserDTO>> ResendVerifyToken(GenericEmail ResendVerifyUserRequest)
@@ -362,7 +475,17 @@ namespace Bocchify_Api.Services
             VerifyToken verifyToken = await _context.VerifyTokens.FirstOrDefaultAsync(vt => vt.UserId == user.Id);
             if (verifyToken != null)
             {
+                if (verifyToken.ExpiresAt > DateTime.UtcNow)
+                {
+                    return new BaseResponse<UserDTO>
+                    {
+                        Data = null,
+                        Success = false,
+                        Message = "A verification email was already sent and is still valid. Please check your inbox."
+                    };
+                }
                 _context.VerifyTokens.Remove(verifyToken);
+                _context.SaveChangesAsync();
             }
 
             string VerifyToken = await _tokenService.GenerateVerifyToken();

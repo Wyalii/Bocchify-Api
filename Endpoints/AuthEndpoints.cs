@@ -10,7 +10,7 @@ namespace Bocchify_Api.Endpoints
         public static IEndpointRouteBuilder MapAuthEndPoint(this IEndpointRouteBuilder app)
         {
 
-            app.MapPost("/register", async (RegisterUser registerUserRequest, IAuthService authService) =>
+            app.MapPost("/Register", async (RegisterUser registerUserRequest, IAuthService authService) =>
             {
                 if (registerUserRequest == null)
                 {
@@ -37,7 +37,7 @@ namespace Bocchify_Api.Endpoints
                 }
             });
 
-            app.MapPost("/login", async (LoginUser loginUserRequest, IAuthService authService) =>
+            app.MapPost("/Login", async (LoginUser loginUserRequest, IAuthService authService) =>
             {
                 try
                 {
@@ -52,7 +52,7 @@ namespace Bocchify_Api.Endpoints
                     {
                         return Results.BadRequest(new { message = result.Message ?? "Login failed", success = result.Success });
                     }
-                    return Results.Ok(new { message = result.Message, success = result.Success });
+                    return Results.Ok(new { message = result.Message, success = result.Success, data = result.Data });
                 }
                 catch (Exception ex)
                 {
@@ -61,7 +61,7 @@ namespace Bocchify_Api.Endpoints
                 }
             });
 
-            app.MapPost("/logout", async (HttpContext httpContext, IAuthService authService) =>
+            app.MapPost("/Logout", async (HttpContext httpContext, IAuthService authService) =>
             {
 
                 var userIdClaim = httpContext.User.FindFirst(ClaimTypes.NameIdentifier);
@@ -91,9 +91,9 @@ namespace Bocchify_Api.Endpoints
                 }
 
 
-            });
+            }).RequireAuthorization();
 
-            app.MapPost("/verify", async (HttpRequest request, IAuthService authService) =>
+            app.MapPost("/Verify", async (HttpRequest request, IAuthService authService) =>
             {
                 try
                 {
@@ -125,7 +125,7 @@ namespace Bocchify_Api.Endpoints
                 }
             });
 
-            app.MapPost("/resendVerification", async (GenericEmail ResendVerifyTokenRequest, IAuthService authService) =>
+            app.MapPost("/ResendVerification", async (GenericEmail ResendVerifyTokenRequest, IAuthService authService) =>
             {
                 try
                 {
@@ -144,8 +144,47 @@ namespace Bocchify_Api.Endpoints
                 }
             });
 
+            app.MapPost("/SendForgotPassword", async (GenericEmail ForgotPasswordRequest, IAuthService authService) =>
+            {
+                try
+                {
+                    var result = await authService.ForgotPassword(ForgotPasswordRequest);
+                    if (!result.Success || result == null)
+                    {
+                        return Results.BadRequest(new { message = result.Message ?? "send forgot password verification failed", success = result.Success });
+                    }
+                    return Results.Ok(new { message = result.Message, success = result.Success });
+
+                }
+                catch (Exception ex)
+                {
+
+                    return Results.Problem($"An error occurred during send forgot password verification: {ex.Message}");
+                }
+            });
+
+            app.MapPost("/ChangePassword", async (ChangePassword ChangePasswordRequest, IAuthService authService) =>
+            {
+                try
+                {
+                    var result = await authService.ChangePassword(ChangePasswordRequest);
+                    if (!result.Success || result == null)
+                    {
+                        return Results.BadRequest(new { message = result.Message ?? "change password failed.", success = result.Success });
+                    }
+                    return Results.Ok(new { message = result.Message, success = result.Success });
+
+                }
+                catch (Exception ex)
+                {
+
+                    return Results.Problem($"An error occurred during change password: {ex.Message}");
+                }
+            });
             return app;
         }
+
+
 
     }
 }
