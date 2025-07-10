@@ -9,7 +9,8 @@ namespace Bocchify_Api.Interfaces
         Task<BaseResponse<UserDTO>> RegisterAsync(RegisterUser RegisterRequest);
         Task<BaseResponse<object>> LoginAsync(LoginUser LoginRequest);
         Task<BaseResponse<UserDTO>> LogoutAsync(int UserId);
-        Task<BaseResponse<UserDTO>> VerifyUserAsync(VerifyUser VerifyUser);
+        Task<BaseResponse<UserDTO>> VerifyUserAsync(VerifyUser VerifyUserRequest);
+        Task<BaseResponse<UserDTO>> ResendVerifyToken(GenericEmail ResendVerifyTokenRequest);
         Task<BaseResponse<UserDTO>> ChangePassword(ChangePassword ChangePasswordRequest);
         Task<BaseResponse<UserDTO>> ForgotPassword(GenericEmail ForgotPasswordRequest);
     }

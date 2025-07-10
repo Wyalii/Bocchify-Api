@@ -26,7 +26,6 @@ namespace Bocchify_Api.Services
         }
         public async Task<BaseResponse<UserDTO>> RegisterAsync(RegisterUser RegisterRequest)
         {
-            // Null checks for dependencies
             if (_context == null)
             {
                 return new BaseResponse<UserDTO>
@@ -146,6 +145,7 @@ namespace Bocchify_Api.Services
             };
 
             await _context.Users.AddAsync(NewUser);
+            await _context.SaveChangesAsync();
             string VerifyToken = await _tokenService.GenerateVerifyToken();
             VerifyToken verifyToken = new VerifyToken
             {
@@ -275,6 +275,7 @@ namespace Bocchify_Api.Services
             };
         }
 
+
         public async Task<BaseResponse<UserDTO>> VerifyUserAsync(VerifyUser VerifyRequest)
         {
             VerifyToken verifyToken = await _context.VerifyTokens.FirstOrDefaultAsync(vf => vf.Token == VerifyRequest.VerifyToken);
@@ -288,7 +289,7 @@ namespace Bocchify_Api.Services
                 };
             }
 
-            if (verifyToken.ExpiresAt <= DateTime.Now)
+            if (verifyToken.ExpiresAt <= DateTime.UtcNow)
             {
                 return new BaseResponse<UserDTO>
                 {
@@ -306,6 +307,16 @@ namespace Bocchify_Api.Services
                     Data = null,
                     Success = false,
                     Message = "invalid user on verification."
+                };
+            }
+
+            if (user.IsVerified)
+            {
+                return new BaseResponse<UserDTO>
+                {
+                    Data = null,
+                    Success = false,
+                    Message = "User is already verified."
                 };
             }
 
@@ -335,6 +346,51 @@ namespace Bocchify_Api.Services
             throw new NotImplementedException();
         }
 
+        public async Task<BaseResponse<UserDTO>> ResendVerifyToken(GenericEmail ResendVerifyUserRequest)
+        {
+            User user = await _context.Users.FirstOrDefaultAsync(u => u.Email == ResendVerifyUserRequest.Email);
+            if (user == null)
+            {
+                return new BaseResponse<UserDTO>
+                {
+                    Data = null,
+                    Success = false,
+                    Message = $"user with email: {ResendVerifyUserRequest.Email} was not found."
+                };
+            }
 
+            VerifyToken verifyToken = await _context.VerifyTokens.FirstOrDefaultAsync(vt => vt.UserId == user.Id);
+            if (verifyToken != null)
+            {
+                _context.VerifyTokens.Remove(verifyToken);
+            }
+
+            string VerifyToken = await _tokenService.GenerateVerifyToken();
+            VerifyToken NewVerifyToken = new VerifyToken
+            {
+                UserId = user.Id,
+                Token = VerifyToken,
+                ExpiresAt = DateTime.UtcNow.AddHours(1),
+                CreatedAt = DateTime.UtcNow
+            };
+            await _context.VerifyTokens.AddAsync(NewVerifyToken);
+            await _emailService.SendVerificationEmail(user.Email, user.Username, VerifyToken);
+            await _context.SaveChangesAsync();
+
+            UserDTO userDTO = new UserDTO
+            {
+                Id = user.Id,
+                Username = user.Username,
+                Email = user.Email,
+                Avatar = user.Avatar
+            };
+            return new BaseResponse<UserDTO>
+            {
+                Data = userDTO,
+                Success = true,
+                Message = $"verification email was sent succesfully, check your email!"
+            };
+
+        }
     }
 }

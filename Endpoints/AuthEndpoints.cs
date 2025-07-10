@@ -26,9 +26,9 @@ namespace Bocchify_Api.Endpoints
                     }
                     if (!result.Success)
                     {
-                        return Results.BadRequest(new { message = result.Message ?? "Registration failed" });
+                        return Results.BadRequest(new { message = result.Message ?? "Registration failed", success = result.Success });
                     }
-                    return Results.Created($"/users/{result.Data.Id}", new { result.Message });
+                    return Results.Created($"/users/{result.Data.Id}", new { result.Message, success = result.Success });
                 }
                 catch (Exception ex)
                 {
@@ -50,9 +50,9 @@ namespace Bocchify_Api.Endpoints
 
                     if (!result.Success)
                     {
-                        return Results.BadRequest(new { message = result.Message ?? "Login failed" });
+                        return Results.BadRequest(new { message = result.Message ?? "Login failed", success = result.Success });
                     }
-                    return Results.Ok(result);
+                    return Results.Ok(new { message = result.Message, success = result.Success });
                 }
                 catch (Exception ex)
                 {
@@ -80,9 +80,9 @@ namespace Bocchify_Api.Endpoints
 
                     if (!result.Success)
                     {
-                        return Results.BadRequest(new { message = result.Message ?? "Logout failed" });
+                        return Results.BadRequest(new { message = result.Message ?? "Logout failed", success = result.Success });
                     }
-                    return Results.Ok(new { message = result.Message });
+                    return Results.Ok(new { message = result.Message, success = result.Success });
                 }
                 catch (Exception ex)
                 {
@@ -91,6 +91,57 @@ namespace Bocchify_Api.Endpoints
                 }
 
 
+            });
+
+            app.MapPost("/verify", async (HttpRequest request, IAuthService authService) =>
+            {
+                try
+                {
+                    if (!request.Headers.TryGetValue("verifyToken", out var tokenHeader) || string.IsNullOrWhiteSpace(tokenHeader))
+                    {
+                        return Results.BadRequest(new
+                        {
+                            success = false,
+                            message = "Verification token is missing in the header."
+                        });
+                    }
+
+                    VerifyUser verifyUser = new VerifyUser
+                    {
+                        VerifyToken = tokenHeader
+                    };
+                    var result = await authService.VerifyUserAsync(verifyUser);
+                    if (!result.Success || result == null)
+                    {
+                        return Results.BadRequest(new { message = result.Message ?? "verify failed", success = result.Success });
+                    }
+
+                    return Results.Ok(new { message = result.Message, success = result.Success });
+                }
+                catch (Exception ex)
+                {
+
+                    return Results.Problem($"An error occurred during logout: {ex.Message}");
+                }
+            });
+
+            app.MapPost("/resendVerification", async (GenericEmail ResendVerifyTokenRequest, IAuthService authService) =>
+            {
+                try
+                {
+                    var result = await authService.ResendVerifyToken(ResendVerifyTokenRequest);
+                    if (!result.Success || result == null)
+                    {
+                        return Results.BadRequest(new { message = result.Message ?? "resend verification failed", success = result.Success });
+                    }
+
+                    return Results.Ok(new { message = result.Message, success = result.Success });
+                }
+                catch (Exception ex)
+                {
+
+                    return Results.Problem($"An error occurred during resend verification: {ex.Message}");
+                }
             });
 
             return app;
