@@ -16,11 +16,6 @@ namespace Bocchify_Api.Services
             var secret = Environment.GetEnvironmentVariable("JWT_SECRET");
             var issuer = Environment.GetEnvironmentVariable("JWT_ISSUER");
             var audience = Environment.GetEnvironmentVariable("JWT_AUDIENCE");
-
-            Console.WriteLine("JWT_SECRET: " + secret);
-            Console.WriteLine("JWT_ISSUER: " + issuer);
-            Console.WriteLine("JWT_AUDIENCE: " + audience);
-
             if (string.IsNullOrWhiteSpace(secret))
             {
                 throw new InvalidOperationException("JWT_SECRET environment variable is not set.");

@@ -19,7 +19,6 @@ namespace Bocchify_Api.Extensions
             string Jwt_Audience = Environment.GetEnvironmentVariable("JWT_AUDIENCE")!;
             string Jwt_Issuer = Environment.GetEnvironmentVariable("JWT_ISSUER")!;
             string Jwt_Secret = Environment.GetEnvironmentVariable("JWT_SECRET")!;
-            Console.WriteLine("JWT_SECRET: " + Jwt_Secret);
 
             if (string.IsNullOrEmpty(ConnectionString) || string.IsNullOrEmpty(Jwt_Audience) ||
                 string.IsNullOrEmpty(Jwt_Issuer) || string.IsNullOrEmpty(Jwt_Secret))
@@ -49,6 +48,7 @@ namespace Bocchify_Api.Extensions
                   };
               });
             builder.Services.AddScoped<IAuthService, AuthService>();
+            builder.Services.AddScoped<IFavouriteService, FavouriteService>();
             builder.Services.AddScoped<PasswordService>();
             builder.Services.AddScoped<IEmailService, EmailService>();
             builder.Services.AddScoped<ITokenService, TokenService>();

@@ -17,6 +17,7 @@ app.UseAuthentication();
 app.UseAuthorization();
 app.UseHttpsRedirection();
 app.MapGroup("/api/v1").WithTags("Auth Endpoints").MapAuthEndPoint();
+app.MapGroup("/api/v1").WithTags("Favourite Endpoints").MapFavouriteEndPoint();
 app.Run();
 
 
