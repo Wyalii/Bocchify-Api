@@ -52,6 +52,7 @@ namespace Bocchify_Api.Extensions
             builder.Services.AddScoped<PasswordService>();
             builder.Services.AddScoped<IEmailService, EmailService>();
             builder.Services.AddScoped<ITokenService, TokenService>();
+            builder.Services.AddAutoMapper(typeof(MappingProfile));
             builder.Services.AddAuthorization();
             builder.Services.AddEndpointsApiExplorer();
             builder.Services.AddSwaggerGen(c =>

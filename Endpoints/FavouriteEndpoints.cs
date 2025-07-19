@@ -35,6 +35,34 @@ namespace Bocchify_Api.Endpoints
                 }
             });
 
+            app.MapGet("/GetFavourites", async (IFavouriteService favouriteService, HttpContext httpContext) =>
+            {
+                var userIdClaim = httpContext.User.FindFirst(ClaimTypes.NameIdentifier);
+
+                if (userIdClaim == null)
+                    return Results.Unauthorized();
+                if (!int.TryParse(userIdClaim.Value, out var userId))
+                    return Results.BadRequest(new { message = "Invalid user ID in token." });
+                try
+                {
+                    var result = await favouriteService.GetFavourites(userId);
+                    if (!result.Success)
+                    {
+                        if (!result.Success)
+                        {
+                            return Results.BadRequest(new { message = result.Message ?? "get favourites failed", success = result.Success });
+                        }
+                    }
+
+                    return Results.Ok(new { message = result.Message, success = result.Success, data = result.Data });
+                }
+                catch (Exception ex)
+                {
+
+                    return Results.Problem($"An error occurred during get favourites: {ex.Message}");
+                }
+            });
+
 
             return app;
         }

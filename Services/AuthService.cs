@@ -1,4 +1,5 @@
 using System.Security.Claims;
+using AutoMapper;
 using Bocchify_Api.AppContext;
 using Bocchify_Api.Contracts;
 using Bocchify_Api.DTOS;
@@ -15,14 +16,16 @@ namespace Bocchify_Api.Services
         private readonly PasswordService _passwordService;
         private readonly IEmailService _emailService;
         private readonly ITokenService _tokenService;
+        private readonly IMapper _mapper;
 
-        public AuthService(AppDbContext context, ILogger<AuthService> logger, PasswordService passwordService, IEmailService emailService, ITokenService tokenService)
+        public AuthService(AppDbContext context, IMapper mapper, ILogger<AuthService> logger, PasswordService passwordService, IEmailService emailService, ITokenService tokenService)
         {
             _context = context;
             _logger = logger;
             _passwordService = passwordService;
             _emailService = emailService;
             _tokenService = tokenService;
+            _mapper = mapper;
         }
         public async Task<BaseResponse<UserDTO>> RegisterAsync(RegisterUser RegisterRequest)
         {
@@ -186,8 +189,10 @@ namespace Bocchify_Api.Services
                 };
             }
 
-            User user = await _context.Users.FirstOrDefaultAsync(u => u.Email == LoginRequest.Email);
-            if (user == null)
+            User UserEntity = await _context.Users
+             .Include(u => u.Favourites)
+            .FirstOrDefaultAsync(u => u.Email == LoginRequest.Email);
+            if (UserEntity == null)
             {
                 return new BaseResponse<object>
                 {
@@ -196,7 +201,7 @@ namespace Bocchify_Api.Services
                 };
             }
 
-            bool CorrectPassword = _passwordService.VerifyPassword(LoginRequest.Password, user.PasswordHash);
+            bool CorrectPassword = _passwordService.VerifyPassword(LoginRequest.Password, UserEntity.PasswordHash);
             if (!CorrectPassword)
             {
                 return new BaseResponse<object>
@@ -205,33 +210,28 @@ namespace Bocchify_Api.Services
                     Message = "incorrect password."
                 };
             }
-            string AccessToken = await _tokenService.GenerateAccessToken(user);
+            string AccessToken = await _tokenService.GenerateAccessToken(UserEntity);
 
-            if (user.RefreshTokenExpiry == null || user.RefreshTokenExpiry <= DateTime.UtcNow)
+            if (UserEntity.RefreshTokenExpiry == null || UserEntity.RefreshTokenExpiry <= DateTime.UtcNow)
             {
                 string RefreshToken = await _tokenService.GenerateRefreshToken();
-                user.RefreshToken = RefreshToken;
-                user.RefreshTokenExpiry = DateTime.UtcNow.AddDays(7);
+                UserEntity.RefreshToken = RefreshToken;
+                UserEntity.RefreshTokenExpiry = DateTime.UtcNow.AddDays(7);
             }
 
             await _context.SaveChangesAsync();
 
             UserDTO userDto = new UserDTO()
             {
-                Username = user.Username,
-                Email = user.Email,
-                Avatar = user.Avatar,
+                Username = UserEntity.Username,
+                Email = UserEntity.Email,
+                Avatar = UserEntity.Avatar,
 
             };
 
             var responseData = new
             {
-                User = new UserDTO
-                {
-                    Id = user.Id,
-                    Username = user.Username,
-                    Email = user.Email
-                },
+                User = _mapper.Map<UserDTO>(UserEntity),
                 accessToken = AccessToken,
 
             };
@@ -274,8 +274,6 @@ namespace Bocchify_Api.Services
                 Message = $"User: {userDTO.Username} Logged Out."
             };
         }
-
-
         public async Task<BaseResponse<UserDTO>> VerifyUserAsync(VerifyUser VerifyRequest)
         {
             VerifyToken verifyToken = await _context.VerifyTokens.FirstOrDefaultAsync(vf => vf.Token == VerifyRequest.VerifyToken);
