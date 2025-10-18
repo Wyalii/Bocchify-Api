@@ -1,17 +1,17 @@
 {
   "format": 1,
   "restore": {
-    "/home/wyalii/Desktop/Bocchify-Api/Bocchify_Server.csproj": {}
+    "/home/wyalii/Health/Bocchify-Api/Bocchify_Server.csproj": {}
   },
   "projects": {
-    "/home/wyalii/Desktop/Bocchify-Api/Bocchify_Server.csproj": {
+    "/home/wyalii/Health/Bocchify-Api/Bocchify_Server.csproj": {
       "version": "1.0.0",
       "restore": {
-        "projectUniqueName": "/home/wyalii/Desktop/Bocchify-Api/Bocchify_Server.csproj",
+        "projectUniqueName": "/home/wyalii/Health/Bocchify-Api/Bocchify_Server.csproj",
         "projectName": "Bocchify_Server",
-        "projectPath": "/home/wyalii/Desktop/Bocchify-Api/Bocchify_Server.csproj",
+        "projectPath": "/home/wyalii/Health/Bocchify-Api/Bocchify_Server.csproj",
         "packagesPath": "/home/wyalii/.nuget/packages/",
-        "outputPath": "/home/wyalii/Desktop/Bocchify-Api/obj/",
+        "outputPath": "/home/wyalii/Health/Bocchify-Api/obj/",
         "projectStyle": "PackageReference",
         "configFilePaths": [
           "/home/wyalii/.nuget/NuGet/NuGet.Config"

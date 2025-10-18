@@ -1,8 +1,8 @@
 {
   "version": 2,
-  "dgSpecHash": "X+CqON5qsws=",
+  "dgSpecHash": "l4hiDU1WjAk=",
   "success": true,
-  "projectFilePath": "/home/wyalii/Desktop/Bocchify-Api/Bocchify_Server.csproj",
+  "projectFilePath": "/home/wyalii/Health/Bocchify-Api/Bocchify_Server.csproj",
   "expectedPackageFiles": [
     "/home/wyalii/.nuget/packages/azure.core/1.38.0/azure.core.1.38.0.nupkg.sha512",
     "/home/wyalii/.nuget/packages/azure.identity/1.11.4/azure.identity.1.11.4.nupkg.sha512",
